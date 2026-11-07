@@ -1,6 +1,7 @@
 #include <SDL.h>
 #include <glad/gl.h>
 #include <iostream>
+#include <functional>
 
 namespace BruhEngine {
     static SDL_Window* window = nullptr;
@@ -11,7 +12,7 @@ namespace BruhEngine {
         // Initialize SDL
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
             std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << "\n";
-            return 1;
+            return false;
         }
 
         // OpenGL 3.3 Core Profile
@@ -35,7 +36,7 @@ namespace BruhEngine {
         if (!window) {
             std::cerr << "Window could not be created! SDL_Error: " << SDL_GetError() << "\n";
             SDL_Quit();
-            return 1;
+            return false;
         }
 
         // Create the OpenGL context
@@ -44,7 +45,7 @@ namespace BruhEngine {
             std::cerr << "OpenGL context could not be created! Ensure your hardware supports OpenGL 3.3. SDL_Error: " << SDL_GetError() << "\n";
             SDL_DestroyWindow(window);
             SDL_Quit();
-            return 1;
+            return false;
         }
 
         SDL_GL_MakeCurrent(window, glContext);
@@ -56,7 +57,7 @@ namespace BruhEngine {
             SDL_GL_DeleteContext(glContext);
             SDL_DestroyWindow(window);
             SDL_Quit();
-            return 1;
+            return false;
         }
 
         // Vsync
@@ -78,7 +79,7 @@ namespace BruhEngine {
         return true;
     }
 
-    void ProcessEvents() {
+    void ProcessEvents(std::function<void(const SDL_Event&)> onEvent = nullptr) {
         // Main loop
         SDL_Event e;
         while (SDL_PollEvent(&e) != 0) {
@@ -94,38 +95,49 @@ namespace BruhEngine {
                     glViewport(0, 0, drawWidth, drawHeight);
                 }
             }
-            // Key ESC
-            else if (e.type == SDL_KEYDOWN) {
-                if (e.key.keysym.sym == SDLK_ESCAPE) {
-                    isRunning = false;
-                }
-            }
+            // Foward keys to main
+            if (onEvent) onEvent(e);
         }
     }
 
-    void Update() {
-        // Game update logic goes here
-    }
+    void Run(std::function<void(float fixedDeltaTime)> updateFunc, std::function<void()> renderFunc) {
+        const double targetFPS = 60.0;
+        const double fixedDt = 1.0 / targetFPS;
 
-    void Render() {
-        glClearColor(0.1f, 0.2f, 0.3f, 1.0f); // R,G,B,A
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        Uint64 lastCounter = SDL_GetPerformanceCounter();
+        double accumulator = 0.0;
 
-        // Buffer
-        SDL_GL_SwapWindow(window);
-    }
+        while (isRunning) {
+            ProcessEvents();
 
-    bool IsRunning() {
-        return isRunning;
+            // Calculate frame time delta
+            Uint64 currentCounter = SDL_GetPerformanceCounter();
+            Uint64 counterFrequency = SDL_GetPerformanceFrequency();
+            double frameTime = (double)(currentCounter - lastCounter) / (double)counterFrequency;
+            lastCounter = currentCounter;
+
+            // Prevent die if a frame takes too long
+            if (frameTime > 0.25) frameTime = 0.25;
+
+            accumulator += frameTime;
+
+            // Fixed-timestep update loop
+            while (accumulator >= fixedDt) {
+                if (updateFunc) updateFunc((float)fixedDt);
+                accumulator -= fixedDt;
+            }
+
+            // Render
+            if (renderFunc) renderFunc();
+
+            // Buffer
+            SDL_GL_SwapWindow(window);
+        }
     }
 
     void Shutdown() {
-        if (glContext) {
-            SDL_GL_DeleteContext(glContext);
-        }
-        if (window) {
-            SDL_DestroyWindow(window);
-        }
+        if (glContext) SDL_GL_DeleteContext(glContext);
+        if (window) SDL_DestroyWindow(window);
         SDL_Quit();
         std::cout << "BruhEngine Shut Down Cleanly.\n";
     }
