@@ -41,3 +41,5 @@ sudo apt install build-essential cmake ninja-build ccache libsdl2-dev
 
 Packages (CachyOS)
 sudo pacman -S cmake ninja ccache
+
+Common compromise. Keep one repo until the engine API settles, with the folder split (engine/, game/) enforcing the boundary. Splitting it into two repos later is easy with git subtree split or git filter-repo, and keeps history.
