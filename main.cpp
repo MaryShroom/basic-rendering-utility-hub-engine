@@ -13,13 +13,9 @@ int main(int argc, char* argv[]) {
     auto updateLogic = [](float fixedDt) {
         squarePosX += 0.5f * fixedDt;
 
-        // Rate-limit console prints to every 0.5 seconds
-        static float printTimer = 0.0f;
-        printTimer += fixedDt;
-        if (printTimer >= 0.5f) {
-            std::cout << "squarePosX: " << squarePosX << "\n";
-            printTimer = 0.0f;
-        }
+        // Update window title every frame (or rate-limited)
+        std::string title = "BruhEngine | squarePosX: " + std::to_string(squarePosX);
+        BruhEngine::SetWindowTitle(title);
     };
 
     // Render clalback

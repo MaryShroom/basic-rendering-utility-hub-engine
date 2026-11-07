@@ -135,6 +135,10 @@ namespace BruhEngine {
         }
     }
 
+    void SetWindowTitle(const std::string& title) {
+        if (window) SDL_SetWindowTitle(window, title.c_str());
+    }
+
     void Shutdown() {
         if (glContext) SDL_GL_DeleteContext(glContext);
         if (window) SDL_DestroyWindow(window);
