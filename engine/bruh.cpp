@@ -139,6 +139,10 @@ namespace BruhEngine {
         if (window) SDL_SetWindowTitle(window, title.c_str());
     }
 
+    void GetWindowSize(int* w, int* h) {
+        if (window) SDL_GetWindowSize(window, w, h);
+    }
+
     void Shutdown() {
         if (glContext) SDL_GL_DeleteContext(glContext);
         if (window) SDL_DestroyWindow(window);
