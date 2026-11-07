@@ -1,4 +1,5 @@
 #include <SDL.h>
+#include <glad/gl.h>
 #include <iostream>
 
 int main(int argc, char* argv[]) {
@@ -43,6 +44,27 @@ int main(int argc, char* argv[]) {
 
     SDL_GL_MakeCurrent(window,glContext);
 
+    // Initialize GLAD
+    int version = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
+    if (version == 0) {
+        std::cerr << "Failed to initialize GLAD\n";
+        SDL_GL_DeleteContext(glContext);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return 1;
+    }
+
+    // Vsync
+    if (SDL_GL_SetSwapInterval(1) < 0) {
+        std::cerr << "Warning: Unable to set V-Sync! SDL_Error: " << SDL_GetError() << "\n";
+    }
+
+    std::cout << "OpenGL Loaded Successfully!\n";
+    std::cout << "Vendor: " << glGetString(GL_VENDOR) << "\n";
+    std::cout << "Renderer: " << glGetString(GL_RENDERER) << "\n";
+    std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << "\n";
+    std::cout << "Shading: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
+
     // Main loop
     bool quit = false;
     SDL_Event e;
@@ -52,6 +74,10 @@ int main(int argc, char* argv[]) {
                 quit = true;
             }
         }
+
+        // Stuff here
+        glClearColor(0.1f, 0.2f, 0.3f, 1.0f); // R,G,B,A
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Buffer
         SDL_GL_SwapWindow(window);

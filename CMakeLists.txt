@@ -31,7 +31,7 @@ find_package(OpenGL REQUIRED)
 # Main and thirdparty headers
 add_executable(BasicRenderingUtilityHub
     main.cpp
-    thirdparty/glad/src/glad.c
+    thirdparty/glad/src/gl.c
 )
 
 # Include thirdparty paths
