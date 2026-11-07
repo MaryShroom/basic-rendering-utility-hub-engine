@@ -1,0 +1,43 @@
+Suggested build order
+
+1. Window, OpenGL context, main loop. Use SDL2 or GLFW. Get a window that opens, clears to a color and closes cleanly.
+2. Fixed timestep game loop. Update logic at a fixed rate (e.g. 60 Hz) and render as fast as vsync allows. Decide this early, because physics and gameplay depend on it.
+3. Input. Keyboard and mouse state, with a thin layer so game code asks for “actions” instead of raw keys.
+4. 2D renderer. Start with textured quads, then move to sprite batching, which draws many sprites in one draw call. This matters most on your HD 5450, which is limited by draw calls and fill rate.
+5. Textures and sprite sheets. Use stb_image for loading, and add a texture atlas so batching works well.
+6. Camera. An orthographic projection with pan and zoom.
+7. Entity and component system. Start simple, such as arrays of structs per component type. You don’t need a fancy ECS library.
+8. Collision and simple physics. AABB first, then circles, then maybe a spatial grid.
+9. Audio. SDL_mixer or miniaudio.
+10. Asset management, then tilemaps, animation, UI, and a scene or level format.
+
+Decisions to make early
+
+* Coordinate system and units. Pick one convention (e.g. y-up, units in pixels or meters) and keep it everywhere.
+* Renderer abstraction. Put a thin interface between the game and OpenGL. It costs little now and makes your future 3D work or another backend much easier.
+* Memory. Avoid allocating in the per-frame hot path. Preallocate and reuse buffers.
+* Resource ownership. Decide who owns textures, sounds and entities, and how they’re freed.
+* Keep engine and game separate. Build the engine as a library, with a small test game as a separate executable. That forces clean boundaries.
+
+Libraries worth using (so you don’t reinvent the boring parts)
+
+* Windowing and input: SDL2 or GLFW
+* GL function loading: glad
+* Math: GLM (header-only, but it does add compile time, so consider writing your own small vec2/mat3 for 2D)
+* Image loading: stb_image
+* Audio: miniaudio
+* Debug UI: Dear ImGui, which is invaluable for inspecting your engine while it runs
+
+Tips for your machine
+
+* Use Ninja with CMake, plus ccache to cut rebuild times.
+* Keep headers light and use forward declarations, since compile time is your main pain on a 4-core CPU.
+* Profile early. perf and Tracy are good on Linux, and RenderDoc may be limited on an old GPU, so check what works on yours.
+* Request OpenGL 3.3 core explicitly and test on your real card often. Don’t assume a newer feature exists.
+* Turn on warnings (-Wall -Wextra) and use AddressSanitizer in debug builds. They catch most memory bugs early.
+
+Packages (Ubuntu 24.04)
+sudo apt install build-essential cmake ninja-build ccache libsdl2-dev
+
+Packages (CachyOS)
+sudo pacman -S cmake ninja ccache
