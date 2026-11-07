@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         400, 400,
-        SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL
+        SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
     );
 
     if (!window) {
@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
 
     SDL_GL_MakeCurrent(window,glContext);
 
-    // Initialize GLAD
+    // Initialize GLAD v2
     int version = gladLoadGL((GLADloadfunc)SDL_GL_GetProcAddress);
     if (version == 0) {
         std::cerr << "Failed to initialize GLAD\n";
@@ -59,6 +59,11 @@ int main(int argc, char* argv[]) {
         std::cerr << "Warning: Unable to set V-Sync! SDL_Error: " << SDL_GetError() << "\n";
     }
 
+    // Get initial drawable size for the viewport
+    int width, height;
+    SDL_GL_GetDrawableSize(window, &width, &height);
+    glViewport(0, 0, width, height);
+
     std::cout << "OpenGL Loaded Successfully!\n";
     std::cout << "Vendor: " << glGetString(GL_VENDOR) << "\n";
     std::cout << "Renderer: " << glGetString(GL_RENDERER) << "\n";
@@ -72,6 +77,20 @@ int main(int argc, char* argv[]) {
         while (SDL_PollEvent(&e) != 0) {
             if (e.type == SDL_QUIT) {
                 quit = true;
+            }
+            // Window events
+            else if (e.type == SDL_WINDOWEVENT) {
+                // Window resize
+                if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED || e.window.event == SDL_WINDOWEVENT_RESIZED) {
+                    SDL_GL_GetDrawableSize(window, &width, &height);
+                    glViewport(0, 0, width, height);
+                }
+            }
+            // Key ESC
+            else if (e.type == SDL_KEYDOWN) {
+                if (e.key.keysym.sym == SDLK_ESCAPE) {
+                    quit = true;
+                }
             }
         }
 
