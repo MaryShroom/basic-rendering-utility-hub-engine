@@ -28,8 +28,16 @@ FetchContent_MakeAvailable(sdl2)
 # OpenGL
 find_package(OpenGL REQUIRED)
 
-# Main
-add_executable(BasicRenderingUtilityHub main.cpp)
+# Main and thirdparty headers
+add_executable(BasicRenderingUtilityHub
+    main.cpp
+    thirdparty/glad/src/glad.c
+)
 
-# Link SDL2
-target_link_libraries(BasicRenderingUtilityHub PRIVATE SDL2::SDL2)
+# Include thirdparty paths
+target_include_directories(BasicRenderingUtilityHub PRIVATE
+    thirdparty/glad/include
+)
+
+# Link SDL2, OpenGL
+target_link_libraries(BasicRenderingUtilityHub PRIVATE SDL2::SDL2 OpenGL::GL)
