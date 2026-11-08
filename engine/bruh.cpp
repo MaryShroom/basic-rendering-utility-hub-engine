@@ -265,6 +265,9 @@ namespace BruhEngine {
     }
 
     void BeginBatch() {
+        glClearColor(0.1f, 0.12f, 0.16f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         if (batcher) batcher->BeginBatch();
     }
 

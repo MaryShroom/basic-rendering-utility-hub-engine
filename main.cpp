@@ -1,30 +1,64 @@
 #include "engine/bruh.hpp"
 #include <iostream>
-#include <functional>
+#include <vector>
+#include <cstdlib>
 
-// Forward declarations of engine API functions
 using namespace BruhEngine;
 
-// Test
-float squarePosX = 0.0f;
+struct Particle {
+    float x, y;
+    float vx, vy;
+    float color[3];
+};
 
 int main() {
-    if (!Init("Hello world", 400, 400)) {
+    if (!Init("BruhEngine - Stress Test", 800, 800)) {
         return -1;
     }
 
-    // Fixed update callback
-    auto updateLogic = [](float fixedDt) {
-        squarePosX += 0.5f * fixedDt;
+    // Initialize 8,000 moving particles
+    const int particleCount = 10000;
+    std::vector<Particle> particles(particleCount);
+    for (int i = 0; i < particleCount; ++i) {
+        particles[i].x = ((float)(rand() % 2000) / 1000.0f) - 1.0f; // Random X (-1.0 to 1.0)
+        particles[i].y = ((float)(rand() % 2000) / 1000.0f) - 1.0f; // Random Y (-1.0 to 1.0)
+        particles[i].vx = ((float)(rand() % 100) - 50.0f) / 300.0f;  // Velocity X
+        particles[i].vy = ((float)(rand() % 100) - 50.0f) / 300.0f;  // Velocity Y
 
-        // Update window title every frame (or rate-limited)
+        particles[i].color[0] = (float)(rand() % 100) / 100.0f;     // R tint
+        particles[i].color[1] = (float)(rand() % 100) / 100.0f;     // G tint
+        particles[i].color[2] = 1.0f;                               // B tint
+    }
+
+    // Fixed update: move particles and bounce off screen edges
+    auto updateLogic = [&](float fixedDt) {
+        for (auto& p : particles) {
+            p.x += p.vx * fixedDt;
+            p.y += p.vy * fixedDt;
+
+            // Screen boundary bounce (NDC range roughly -0.95 to 0.95)
+            if (p.x < -0.95f || p.x > 0.95f) p.vx = -p.vx;
+            if (p.y < -0.95f || p.y > 0.95f) p.vy = -p.vy;
+        }
+
+        // Display performance stats in title bar
         int drawCalls = GetDrawCalls();
-        std::string title = "BruhEngine | Pos: " + std::to_string(squarePosX) + " | DrawCalls: " + std::to_string(drawCalls);
+        std::string title = "BruhEngine | Sprites: " + std::to_string(particleCount) +
+                            " | Draw Calls: " + std::to_string(drawCalls);
         SetWindowTitle(title);
     };
 
-    // Run
-    Run(updateLogic, nullptr);
+    // Custom render logic: what to draw each frame
+    auto renderLogic = [&]() {
+        BeginBatch();
+        for (const auto& p : particles) {
+            DrawQuad(p.x, p.y, 0.025f, 0.025f, p.color);
+        }
+        EndBatch();
+    };
+
+    // Run engine loop with custom update and render callbacks
+    Run(updateLogic, renderLogic);
 
     Shutdown();
     return 0;
