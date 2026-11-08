@@ -6,6 +6,10 @@
 #include "IndexBuffer.hpp"
 #include "SpriteBatcher.hpp"
 
+#include "imgui.h"
+#include "imgui_impl_sdl2.h"
+#include "imgui_impl_opengl3.h"
+
 #include <SDL.h>
 #include <glad/gl.h>
 #include <iostream>
@@ -148,6 +152,17 @@ namespace BruhEngine {
         std::cout << "Renderer: " << glGetString(GL_RENDERER) << "\n";
         std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << "\n";
         std::cout << "Shading: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
+
+        // --- Setup Dear ImGui context ---
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        ImGui::StyleColorsDark();
+
+        // Setup Platform/Renderer backends
+        ImGui_ImplSDL2_InitForOpenGL(window, glContext);
+        ImGui_ImplOpenGL3_Init("#version 330 core");
+
         return true;
     }
 
@@ -155,6 +170,9 @@ namespace BruhEngine {
         // Main loop
         SDL_Event e;
         while (SDL_PollEvent(&e) != 0) {
+            // Pass event to ImGui backend first
+            ImGui_ImplSDL2_ProcessEvent(&e);
+
             if (e.type == SDL_QUIT) {
                 isRunning = false;
             }
@@ -239,6 +257,11 @@ namespace BruhEngine {
     }
 
     void Shutdown() {
+        // Cleanup ImGui
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplSDL2_Shutdown();
+        ImGui::DestroyContext();
+
         // GPU resources cleanup
         delete shader;
         delete vbo;
@@ -290,6 +313,11 @@ namespace BruhEngine {
         glClearColor(0.1f, 0.12f, 0.16f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // Start the ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+
         if (batcher) batcher->BeginBatch();
     }
 
@@ -302,5 +330,9 @@ namespace BruhEngine {
             batcher->EndBatch();
             batcher->Flush(*shader, *texture);
         }
+
+        // Render ImGui draw data over the engine scene
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
 }

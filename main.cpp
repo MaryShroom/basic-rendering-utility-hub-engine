@@ -1,4 +1,7 @@
 #include "engine/bruh.hpp"
+
+#include "imgui.h"
+
 #include <iostream>
 #include <vector>
 #include <cstdlib>
@@ -75,6 +78,40 @@ int main() {
         for (const auto& p : particles) {
             DrawQuad(p.x, p.y, 0.1f, 0.1f, p.color);
         }
+
+        // --- ImGui Performance HUD Overlay ---
+        ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
+        ImGui::SetNextWindowBgAlpha(0.75f); // Semi-transparent
+
+        if (ImGui::Begin("Engine Metrics", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav)) {
+            ImGuiIO& io = ImGui::GetIO();
+
+            // Frame rate and delta time graph
+            ImGui::Text("Performance");
+            ImGui::Text("FPS: %.1f (%.3f ms/frame)", io.Framerate, 1000.0f / io.Framerate);
+
+            ImGui::Separator();
+
+            // Stress test stats
+            float screenArea = 4.0f;
+            float totalSpriteArea = (float)particleCount * (spriteWidth * spriteHeight);
+            float overdrawFactor = totalSpriteArea / screenArea;
+
+            ImGui::Text("Active Sprites: %d", particleCount);
+            ImGui::Text("Draw Calls: %d", GetDrawCalls());
+            ImGui::Text("Est. Overdraw: ~%.0fx", overdrawFactor);
+
+            ImGui::Separator();
+
+            // Interactive VSync control
+            bool vsync = IsVSyncEnabled();
+            if (ImGui::Checkbox("VSync Enabled", &vsync)) {
+                SetVSync(vsync);
+            }
+
+            ImGui::End();
+        }
+
         EndBatch();
     };
 
