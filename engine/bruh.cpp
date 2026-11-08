@@ -130,14 +130,32 @@ namespace BruhEngine {
         return "72 C";
     }
 
-    static std::string GetGPULoadString() {
-        std::ifstream f("/sys/class/drm/card0/device/gpu_busy_percent");
-        if (f.is_open()) {
-            int load = 0;
-            f >> load;
-            return std::to_string(load) + "%";
+    std::string GetGPULoadString() {
+        // Safely check card indices 0 through 2 for AMD gpu telemetry
+        for (int i = 0; i <= 2; ++i) {
+            std::string path = "/sys/class/drm/card" + std::to_string(i) + "/device/gpu_busy_percent";
+            std::ifstream file(path);
+            if (file.is_open()) {
+                std::string valStr;
+                std::getline(file, valStr);
+
+                // Strip whitespace/newlines
+                valStr.erase(0, valStr.find_first_not_of(" \n\r\t"));
+                valStr.erase(valStr.find_last_not_of(" \n\r\t") + 1);
+
+                try {
+                    int busy = std::stoi(valStr);
+                    if (busy >= 0 && busy <= 100) {
+                        return std::to_string(busy) + "%";
+                    }
+                } catch (...) {
+                    // Ignore parse errors and continue
+                }
+            }
         }
-        return "100%"; // Default under heavy fill-rate stress tests
+
+        // Fallback if the file doesn't exist on this hardware/GPU vendor
+        return "N/A";
     }
 
     bool Init(const char* title, int width, int height) {
