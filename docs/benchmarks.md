@@ -17,12 +17,12 @@ Only compare runs that share the same window size, overdraw, blending and depth 
 
 ### PC-B (CachyOS)
 
-- CPU: <fill in>
-- GPU: <fill in>
-- RAM: <fill in>
+- CPU: AMD Ryzen 7 5700X3D (16) @ 4.15 GHz
+- GPU: AMD Radeon RX 5700 XT [Discrete]
+- RAM: 32 GB
 - OS: CachyOS
-- Mesa / driver: <fill in>
-- Compiler: <fill in>
+- Mesa / driver: Mesa 26.2.4-arch3.1 (OpenGL 4.6 Core Profile)
+- Compiler: g++ (GCC) 16.2.1 20260810
 
 ## 2. Build info (record for every result)
 
@@ -52,6 +52,8 @@ Fields marked (est.) were estimated from fps, not measured.
 | 2026-11-08 | A | n/a | 10k sprites, 0.1 size, 1 draw call | ~25x | on | on | off | ~8.5 (est.) | n/a | ~117 | 100% | ~33% | 88 C | Baseline. GPU-bound (fill rate). 10 minute run, too long; keep runs short. |
 | 2026-11-08 | A | n/a | 10k sprites, small sprites, 1 draw call | low | on | on | off | ~3 | n/a | ~337 | n/a | n/a | n/a | Early run before the overdraw test; sprite count, not size, was the limit. |
 | 2026-11-08 | A | n/a | 10k sprites, large sprites, 1 draw call | very high | on | on | off | ~320 | n/a | ~3 | n/a | n/a | n/a | Fill-rate wall. Desktop nearly froze. Do not repeat at this size. |
+| 2026-11-08 | B | n/a | 60k Sprites (0.1x) | ~150x | on | on | on | 22.25 | 28.03 | 44.8 | 100% | 14% | 62 C | First test on CachyOS. |
+
 
 ## 5. Planned runs
 
