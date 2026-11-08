@@ -12,7 +12,7 @@ Target hardware: i5-2320, Radeon HD 5450 (Cedar), 6 GB RAM.
 
 ## Benchmarking (finish quickly, then move on)
 
-- [ ] Save baseline numbers in `docs/benchmarks.md`
+- [x] Save baseline numbers in `docs/benchmarks.md`
 - [ ] Test overdraw levels (5x, 10x, 20x), blending on and off, note frame time for each
 - [ ] Add automatic cut-off if a frame exceeds ~100 ms
 - [ ] Use a small window for future stress tests

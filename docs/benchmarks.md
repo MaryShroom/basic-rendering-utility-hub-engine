@@ -33,9 +33,15 @@ Only compare runs that share the same window size, overdraw, blending and depth 
 
 ## 3. Test setup (keep identical between comparable runs)
 
-- Window size (fill cost scales with pixels; use a small window for risky tests) 700 by 700 resolution
+- Window size (fill cost scales with pixels; use a small window for risky tests) 700 by 700 resolutions
 - Sprite count and sprite size
 - Overdraw = total sprite area / window area (1.0 means each pixel drawn once on average)
+- Gpix/s (derived) = overdraw x window width x window height x fps / 1e9
+  - Lets you compare machines fairly. Only meaningful for fill-bound runs (GPU at 100%, frame time grows with overdraw).
+  - Only as accurate as the overdraw figure; print the exact overdraw from code instead of estimating.
+  - Counts pixels submitted, not pixels actually shaded (depth-rejected and discarded pixels still count).
+  - Do not compare blended runs with opaque runs, or runs with different shaders or texture sizes.
+  - Record the window size for every run; without it Gpix/s cannot be computed.
 - Blending on/off, depth test on/off
 - Vsync on/off (vsync off for benchmarks, otherwise fps is capped)
 - Random seed and sprite movement (same every run)
@@ -47,12 +53,15 @@ Only compare runs that share the same window size, overdraw, blending and depth 
 Frame time is the main number. Record the average and the worst frames, not just fps.
 Fields marked (est.) were estimated from fps, not measured.
 
-| Date | PC | Commit | Test | Overdraw | Blend | Depth | Vsync | Avg ms | Worst ms | FPS | GPU load | CPU load | Temp | Notes |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 2026-11-08 | A | n/a | 10k sprites, 0.1 size, 1 draw call | ~25x | on | on | off | ~8.5 (est.) | n/a | ~117 | 100% | ~33% | 88 C | Baseline. GPU-bound (fill rate). 10 minute run, too long; keep runs short. |
-| 2026-11-08 | A | n/a | 10k sprites, small sprites, 1 draw call | low | on | on | off | ~3 | n/a | ~337 | n/a | n/a | n/a | Early run before the overdraw test; sprite count, not size, was the limit. |
-| 2026-11-08 | A | n/a | 10k sprites, large sprites, 1 draw call | very high | on | on | off | ~320 | n/a | ~3 | n/a | n/a | n/a | Fill-rate wall. Desktop nearly froze. Do not repeat at this size. |
-| 2026-11-08 | B | n/a | 60k Sprites (0.1x) | ~150x | on | on | on | 22.25 | 28.03 | 44.8 | 100% | 14% | 62 C | First test on CachyOS. |
+Window and Gpix/s are new columns. Gpix/s is derived (see section 3), not measured.
+Runs from before these columns existed show n/a.
+
+| Date | PC | Commit | Test | Window | Overdraw | Blend | Depth | Vsync | Avg ms | Worst ms | FPS | Gpix/s (derived) | GPU load | CPU load | Temp | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2026-11-08 | A | n/a | 10k sprites, 0.1 size, 1 draw call | n/a | ~25x | on | on | off | ~8.5 (est.) | n/a | ~117 | n/a | 100% | ~33% | 88 C | Baseline. GPU-bound (fill rate). 10 minute run, too long; keep runs short. |
+| 2026-11-08 | A | n/a | 10k sprites, small sprites, 1 draw call | n/a | low | on | on | off | ~3 | n/a | ~337 | n/a | n/a | n/a | n/a | Early run before the overdraw test; sprite count, not size, was the limit. |
+| 2026-11-08 | A | n/a | 10k sprites, large sprites, 1 draw call | n/a | very high | on | on | off | ~320 | n/a | ~3 | n/a | n/a | n/a | n/a | Fill-rate wall. Desktop nearly froze. Do not repeat at this size. |
+| 2026-11-08 | B | n/a | 60k Sprites (0.1x) | n/a | ~150x | on | on | on | 22.25 | 28.03 | 44.8 | n/a | 100% | 14% | 62 C | First test on CachyOS. Window size not recorded. |
 
 
 ## 5. Planned runs

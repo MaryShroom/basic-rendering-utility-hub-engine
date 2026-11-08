@@ -46,8 +46,9 @@ int main() {
     float spriteWidth = 0.1f;
     float spriteHeight = 0.1f;
 
-    float overdrawFactor = (particleCount * (0.1f * 0.1f)) / 4.0f;
-    BruhEngine::SetBenchmarkInfo("60k Sprites (0.1x)", "~" + std::to_string((int)overdrawFactor) + "x");
+    // Update this
+    float overdrawFactor = ((float)particleCount * (spriteWidth * spriteHeight)) / 4.0f;
+    BruhEngine::SetBenchmarkInfo("60k Sprites (0.1x)", overdrawFactor);
 
     // Fixed update: move particles and bounce off screen edges
     auto updateLogic = [&](float fixedDt) {
@@ -69,6 +70,11 @@ int main() {
         float overdrawFactor = totalSpriteArea / screenArea;
         // ----------------------------
 
+        // --- Window Resolution & Pixels Calculation ---
+        int winW = 700, winH = 700;
+        BruhEngine::GetWindowSize(&winW, &winH);
+        double windowPixels = (double)(winW * winH);
+
         BeginBatch();
         for (const auto& p : particles) {
             DrawQuad(p.x, p.y, 0.1f, 0.1f, p.color);
@@ -80,14 +86,22 @@ int main() {
 
         if (ImGui::Begin("Engine Metrics", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav)) {
             ImGuiIO& io = ImGui::GetIO();
+            double fps = io.Framerate;
+
+            // Pixels Drawn Per Second Formula: Overdraw × Window Pixels × FPS
+            double pixelsPerSec = (double)overdrawFactor * windowPixels * fps;
 
             ImGui::Text("Performance");
-            ImGui::Text("FPS: %.1f (%.3f ms/frame)", io.Framerate, 1000.0f / io.Framerate);
+            ImGui::Text("FPS: %.1f (%.3f ms/frame)", fps, 1000.0f / fps);
             ImGui::Separator();
 
             ImGui::Text("Active Sprites: %d", particleCount);
             ImGui::Text("Draw Calls: %d", GetDrawCalls());
             ImGui::Text("Est. Overdraw: ~%.0fx", overdrawFactor);
+
+            // Display in Megapixels per second for readability (e.g., Mpx/s)
+            ImGui::Text("Pixels/sec: %.2f Mpx/s", pixelsPerSec / 1'000'000.0);
+
             ImGui::Separator();
 
             bool vsync = IsVSyncEnabled();

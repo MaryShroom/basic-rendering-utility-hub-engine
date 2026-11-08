@@ -64,11 +64,11 @@ namespace BruhEngine {
         "}\n";
 
     static std::string s_BenchmarkTestName = "Default Test";
-    static std::string s_BenchmarkOverdraw = "n/a";
+    static float s_BenchmarkOverdrawFactor = 1.0f;
 
-    void SetBenchmarkInfo(const std::string& testName, const std::string& overdrawStr) {
+    void SetBenchmarkInfo(const std::string& testName, float overdrawFactor) {
         s_BenchmarkTestName = testName;
-        s_BenchmarkOverdraw = overdrawStr;
+        s_BenchmarkOverdrawFactor = overdrawFactor;
     }
 
     // --- Hardware Diagnostic Helpers ---
@@ -389,6 +389,16 @@ namespace BruhEngine {
         char dateBuf[32];
         std::strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%d", &tmBuffer);
 
+        // --- Window Size ---
+        int winW = 0, winH = 0;
+        GetWindowSize(&winW, &winH);
+        std::string windowCol = std::to_string(winW) + "x" + std::to_string(winH);
+
+        // --- Gpix/s Derived Calculation ---
+        // Formula: (Overdraw * Window Pixels * Avg FPS) / 1,000,000,000
+        double totalWindowPixels = (double)winW * (double)winH;
+        double gpixPerSec = (s_BenchmarkOverdrawFactor * totalWindowPixels * avgFPS) / 1'000'000'000.0;
+
         // --- Query real OpenGL pipeline states ---
         bool isBlendActive = glIsEnabled(GL_BLEND);
         bool isDepthActive = glIsEnabled(GL_DEPTH_TEST);
@@ -397,25 +407,26 @@ namespace BruhEngine {
         std::string pcCol       = "A";
         std::string commitCol   = "n/a";
         std::string testCol     = s_BenchmarkTestName;
-        std::string overdrawCol = s_BenchmarkOverdraw;
+        std::string overdrawCol = "~" + std::to_string((int)s_BenchmarkOverdrawFactor) + "x";
         std::string blendCol    = isBlendActive ? "on" : "off";
         std::string depthCol    = isDepthActive ? "on" : "off";
         std::string vsyncCol    = s_VSyncEnabled ? "on" : "off";
         std::string gpuLoadCol  = GetGPULoadString();
         std::string cpuLoadCol  = GetCPULoadString();
         std::string tempCol     = GetGPUTemperature();
-        std::string notesCol    = "Automated shutdown baseline run";
+        std::string notesCol    = "Automated multi-batch GPU run";
 
         // --- Output Benchmark Row to Terminal ---
         std::cout << "\n========================================================================================\n";
         std::cout << "                                BRUHENGINE BENCHMARK RESULT                             \n";
         std::cout << "========================================================================================\n";
-        std::cout << "| Date | PC | Commit | Test | Overdraw | Blend | Depth | Vsync | Avg ms | Worst ms | FPS | GPU load | CPU load | Temp | Notes |\n";
+        std::cout << "| Date | PC | Commit | Test | Window | Overdraw | Blend | Depth | Vsync | Avg ms | Worst ms | FPS | Gpix/s (derived) | GPU load | CPU load | Temp | Notes |\n";
         std::cout << "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n";
         std::cout << "| " << dateBuf
                   << " | " << pcCol
                   << " | " << commitCol
                   << " | " << testCol
+                  << " | " << windowCol
                   << " | " << overdrawCol
                   << " | " << blendCol
                   << " | " << depthCol
@@ -423,6 +434,7 @@ namespace BruhEngine {
                   << " | " << std::fixed << std::setprecision(2) << avgFrameTimeMs
                   << " | " << worstFrameTimeMs
                   << " | " << std::setprecision(1) << avgFPS
+                  << " | " << std::setprecision(3) << gpixPerSec
                   << " | " << gpuLoadCol
                   << " | " << cpuLoadCol
                   << " | " << tempCol

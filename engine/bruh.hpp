@@ -27,5 +27,5 @@ namespace BruhEngine {
     void EndBatch();
 
     // Benchmark
-    void SetBenchmarkInfo(const std::string& testName, const std::string& overdrawStr);
+    void SetBenchmarkInfo(const std::string& testName, float overdrawFactor);
 }
