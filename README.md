@@ -13,10 +13,20 @@ sudo pacman -S cmake ninja ccache
 ```
 
 ## Build
+### Configure the project using Ninja as the generator
 ```
-# Configure the project using Ninja as the generator
-cmake -B build -G Ninja
+# Debug
+cmake -S . -B build-debug -G Ninja -DCMAKE_BUILD_TYPE=Debug
 
-# Build the project
-cmake --build build
+# Release
+cmake -S . -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release
+```
+
+### Build the project
+```
+# Debug
+cmake --build build-debug
+
+# Release
+cmake --build build-release
 ```

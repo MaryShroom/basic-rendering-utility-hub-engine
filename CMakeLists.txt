@@ -31,13 +31,32 @@ find_package(OpenGL REQUIRED)
 # Main and thirdparty headers
 add_executable(BasicRenderingUtilityHub
     main.cpp
+    engine/bruh.cpp
     thirdparty/glad/src/gl.c
 )
 
 # Include thirdparty paths
 target_include_directories(BasicRenderingUtilityHub PRIVATE
     thirdparty/glad/include
+    .
 )
 
 # Link SDL2, OpenGL
 target_link_libraries(BasicRenderingUtilityHub PRIVATE SDL2::SDL2 OpenGL::GL)
+
+# DEBUG flags
+target_compile_options(BasicRenderingUtilityHub PRIVATE
+    $<$<CONFIG:Debug>:
+        -Wall
+        -Wextra
+        -g
+        -fno-omit-frame-pointer
+        -fsanitize=address,undefined
+    >
+)
+
+target_link_options(BasicRenderingUtilityHub PRIVATE
+    $<$<CONFIG:Debug>:
+        -fsanitize=address,undefined
+    >
+)

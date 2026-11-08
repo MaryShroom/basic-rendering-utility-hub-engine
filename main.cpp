@@ -1,11 +1,15 @@
-#include "engine/bruh.cpp"
+#include "engine/bruh.hpp"
 #include <iostream>
+#include <functional>
+
+// Forward declarations of engine API functions
+using namespace BruhEngine;
 
 // Test
 float squarePosX = 0.0f;
 
-int main(int argc, char* argv[]) {
-    if (!BruhEngine::Init("Hello world", 400, 400)) {
+int main() {
+    if (!Init("Hello world", 400, 400)) {
         return -1;
     }
 
@@ -15,18 +19,12 @@ int main(int argc, char* argv[]) {
 
         // Update window title every frame (or rate-limited)
         std::string title = "BruhEngine | squarePosX: " + std::to_string(squarePosX);
-        BruhEngine::SetWindowTitle(title);
-    };
-
-    // Render clalback
-    auto renderFrame = []() {
-        glClearColor(0.1f, 0.2f, 0.3f, 1.0f); // R,G,B,A
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        SetWindowTitle(title);
     };
 
     // Run
-    BruhEngine::Run(updateLogic, renderFrame);
+    Run(updateLogic, nullptr);
 
-    BruhEngine::Shutdown();
+    Shutdown();
     return 0;
 }
