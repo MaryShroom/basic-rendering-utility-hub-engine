@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>
+#include <SDL.h>
 
 using namespace BruhEngine;
 
@@ -15,6 +16,15 @@ int main() {
     if (!Init("BruhEngine - Stress Test", 800, 800)) {
         return -1;
     }
+
+    // Register event listener to toggle VSync on pressing 'V'
+    SetEventCallback([](const SDL_Event& e) {
+        if (e.type == SDL_KEYDOWN) {
+            if (e.key.keysym.sym == SDLK_v) {
+                SetVSync(!IsVSyncEnabled());
+            }
+        }
+    });
 
     // Initialize 8,000 moving particles
     const int particleCount = 10000;

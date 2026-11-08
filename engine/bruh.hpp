@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 #include <string>
+#include <SDL.h>
 
 namespace BruhEngine {
     bool Init(const char* title, int width, int height);
@@ -16,6 +17,9 @@ namespace BruhEngine {
     // Draw Calls
     int GetDrawCalls();
     void IncrementDrawCalls();
+
+    // Event Handling Hook
+    void SetEventCallback(std::function<void(const SDL_Event&)> callback);
 
     // Batching hook
     void BeginBatch();

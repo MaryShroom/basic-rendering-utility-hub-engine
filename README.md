@@ -30,3 +30,10 @@ cmake --build build-debug
 # Release
 cmake --build build-release
 ```
+
+### Run It
+```
+# With HUD
+GALLIUM_HUD="fps,frametime" ./build-debug/BasicRenderingUtilityHub
+GALLIUM_HUD="fps,frametime" ./build-release/BasicRenderingUtilityHub
+```

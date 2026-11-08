@@ -18,6 +18,7 @@ namespace BruhEngine {
     static bool isRunning = false;
     static int s_DrawCalls = 0;
     static bool s_VSyncEnabled = true;
+    static std::function<void(const SDL_Event&)> s_EventCallback = nullptr;
 
     // Engine-managed OpenGL pipeline resources
     static Shader* shader = nullptr;
@@ -150,7 +151,7 @@ namespace BruhEngine {
         return true;
     }
 
-    void ProcessEvents(std::function<void(const SDL_Event&)> onEvent = nullptr) {
+    void ProcessEvents() {
         // Main loop
         SDL_Event e;
         while (SDL_PollEvent(&e) != 0) {
@@ -167,7 +168,7 @@ namespace BruhEngine {
                 }
             }
             // Foward keys to main
-            if (onEvent) onEvent(e);
+            if (s_EventCallback) s_EventCallback(e);
         }
     }
 
@@ -279,6 +280,10 @@ namespace BruhEngine {
 
     void IncrementDrawCalls() {
         s_DrawCalls++;
+    }
+
+    void SetEventCallback(std::function<void(const SDL_Event&)> callback) {
+        s_EventCallback = callback;
     }
 
     void BeginBatch() {
