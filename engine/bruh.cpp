@@ -17,6 +17,7 @@ namespace BruhEngine {
     static SDL_GLContext glContext = nullptr;
     static bool isRunning = false;
     static int s_DrawCalls = 0;
+    static bool s_VSyncEnabled = true;
 
     // Engine-managed OpenGL pipeline resources
     static Shader* shader = nullptr;
@@ -25,6 +26,7 @@ namespace BruhEngine {
     static IndexBuffer* ibo = nullptr;
     static Texture* texture = nullptr;
     static SpriteBatcher* batcher = nullptr;
+
 
     // Vertex and Fragment
     const char* vertexShaderSource = "#version 330 core\n"
@@ -101,6 +103,7 @@ namespace BruhEngine {
         }
 
         // Vsync
+        s_VSyncEnabled = true;
         if (SDL_GL_SetSwapInterval(1) < 0) {
             std::cerr << "Warning: Unable to set V-Sync! SDL_Error: " << SDL_GetError() << "\n";
         }
@@ -254,6 +257,20 @@ namespace BruhEngine {
         if (window) SDL_DestroyWindow(window);
         SDL_Quit();
         std::cout << "BruhEngine Shut Down Cleanly.\n";
+    }
+
+    void SetVSync(bool enabled) {
+        s_VSyncEnabled = enabled;
+        // 1 for VSync on, 0 for VSync off (unlocked fps)
+        if (SDL_GL_SetSwapInterval(enabled ? 1 : 0) < 0) {
+            std::cerr << "Warning: Unable to modify V-Sync! SDL_Error: " << SDL_GetError() << "\n";
+        } else {
+            std::cout << "V-Sync " << (enabled ? "Enabled" : "Disabled") << "\n";
+        }
+    }
+
+    bool IsVSyncEnabled() {
+        return s_VSyncEnabled;
     }
 
     int GetDrawCalls() {

@@ -9,6 +9,10 @@ namespace BruhEngine {
     void GetWindowSize(int* w, int* h);
     void Shutdown();
 
+    // VSync controls
+    void SetVSync(bool enabled);
+    bool IsVSyncEnabled();
+
     // Draw Calls
     int GetDrawCalls();
     void IncrementDrawCalls();
