@@ -2,6 +2,9 @@
 #include "Shader.hpp"
 #include "VertexArray.hpp"
 #include "VertexBuffer.hpp"
+#include "Texture.hpp"
+#include "IndexBuffer.hpp"
+
 #include <SDL.h>
 #include <glad/gl.h>
 #include <iostream>
@@ -17,22 +20,29 @@ namespace BruhEngine {
     static Shader* shader = nullptr;
     static VertexBuffer* vbo = nullptr;
     static VertexArray* vao = nullptr;
+    static IndexBuffer* ibo = nullptr;
+    static Texture* texture = nullptr;
 
-    // Minimal vertex and fragment shaders with color interpolation
+    // Vertex and Fragment
     const char* vertexShaderSource = "#version 330 core\n"
         "layout (location = 0) in vec2 aPos;\n"
         "layout (location = 1) in vec3 aColor;\n"
+        "layout (location = 2) in vec2 aTexCoord;\n"
         "out vec3 fragColor;\n"
+        "out vec2 TexCoord;\n"
         "void main() {\n"
         "   gl_Position = vec4(aPos, 0.0, 1.0);\n"
         "   fragColor = aColor;\n"
+        "   TexCoord = aTexCoord;\n"
         "}\n";
 
     const char* fragmentShaderSource = "#version 330 core\n"
         "in vec3 fragColor;\n"
+        "in vec2 TexCoord;\n"
         "out vec4 FragColor;\n"
+        "uniform sampler2D u_Texture;\n"
         "void main() {\n"
-        "   FragColor = vec4(fragColor, 1.0);\n"
+        "   FragColor = texture(u_Texture, TexCoord) * vec4(fragColor, 1.0);\n"
         "}\n";
 
     bool Init(const char* title, int width, int height) {
@@ -100,17 +110,27 @@ namespace BruhEngine {
         // Compile Shaders
         shader = new Shader(vertexShaderSource, fragmentShaderSource);
 
-        // Setup vertex data (VBO & VAO)
-        float vertices[] = {
-            // Positions    // Colors
-             0.0f,  0.5f,   1.0f, 0.0f, 0.0f, // Top Red
-            -0.5f, -0.5f,   0.0f, 1.0f, 0.0f, // Bottom-Left Green
-             0.5f, -0.5f,   0.0f, 0.0f, 1.0f  // Bottom-right Blue
+        // Create procedural texture
+        texture = new Texture(64, 64);
+
+        // 4 Vertices: Position (X, Y), Color (R, G, B), UV (U, V)
+        float quadVertices[] = {
+            // Position     // Color          // UV
+            -0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 0.0f, // Bottom-Left
+            0.5f, -0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 0.0f, // Bottom-Right
+            0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  1.0f, 1.0f, // Top-Right
+            -0.5f,  0.5f,   1.0f, 1.0f, 1.0f,  0.0f, 1.0f  // Top-Left
         };
 
-        vbo = new VertexBuffer(vertices, sizeof(vertices));
+        unsigned int quadIndices[] = {
+            0, 1, 2, // First Triangle
+            2, 3, 0  // Second Triangle
+        };
+
+        vbo = new VertexBuffer(quadVertices, sizeof(quadVertices));
+        ibo = new IndexBuffer(quadIndices, 6);
         vao = new VertexArray();
-        vao->AddBuffer(*vbo);
+        vao->AddTexturedBuffer(*vbo);
 
         isRunning = true;
         std::cout << "BruhEngine (OpenGL) Loaded Successfully!\n";
@@ -142,13 +162,16 @@ namespace BruhEngine {
         }
     }
 
-    void RenderTriangle() {
+    void Render() {
         glClearColor(0.1f, 0.12f, 0.16f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        texture->Bind(0);
         shader->Bind();
+        shader->SetUniform1f("u_Texture", 0);
         vao->Bind();
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        ibo->Bind();
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
     }
 
     void Run(std::function<void(float fixedDeltaTime)> updateFunc, std::function<void()> renderFunc) {
@@ -180,7 +203,7 @@ namespace BruhEngine {
 
             // Render (use engine render if main.cpp did not provide one)
             if (renderFunc) renderFunc();
-            else RenderTriangle();
+            else Render();
 
             // Buffer
             SDL_GL_SwapWindow(window);
@@ -199,10 +222,15 @@ namespace BruhEngine {
         // GPU resources cleanup
         delete shader;
         delete vbo;
+        delete ibo;
         delete vao;
+        delete texture;
+
         shader = nullptr;
         vbo = nullptr;
+        ibo = nullptr;
         vao = nullptr;
+        texture = nullptr;
 
         if (glContext) SDL_GL_DeleteContext(glContext);
         if (window) SDL_DestroyWindow(window);

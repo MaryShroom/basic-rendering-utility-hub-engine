@@ -23,17 +23,22 @@ public:
         glBindVertexArray(0);
     }
 
-    // Specifies layout for a standard interleaved vertex format (e.g., Position + Color)
-    void AddBuffer(const VertexBuffer& vb) {
+    void AddTexturedBuffer(const VertexBuffer& vb) {
         Bind();
         vb.Bind();
 
+        GLsizei stride = 7 * sizeof(float);
+
         // Attribute 0: Position (2 floats)
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, (void*)0);
         glEnableVertexAttribArray(0);
 
         // Attribute 1: Color (3 floats)
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sizeof(float)));
         glEnableVertexAttribArray(1);
+
+        // Attribute 2: TexCoords / UVs (2 floats)
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(5 * sizeof(float)));
+        glEnableVertexAttribArray(2);
     }
 };
