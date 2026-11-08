@@ -62,7 +62,14 @@ Runs from before these columns existed show n/a.
 | 2026-11-08 | A | n/a | 10k sprites, small sprites, 1 draw call | n/a | low | on | on | off | ~3 | n/a | ~337 | n/a | n/a | n/a | n/a | Early run before the overdraw test; sprite count, not size, was the limit. |
 | 2026-11-08 | A | n/a | 10k sprites, large sprites, 1 draw call | n/a | very high | on | on | off | ~320 | n/a | ~3 | n/a | n/a | n/a | n/a | Fill-rate wall. Desktop nearly froze. Do not repeat at this size. |
 | 2026-11-08 | B | n/a | 60k Sprites (0.1x) | n/a | ~150x | on | on | on | 22.25 | 28.03 | 44.8 | n/a | 100% | 14% | 62 C | First test on CachyOS. Window size not recorded. |
-
+| 2026-11-08 | B | 4dbb38d | 2k Sprites (0.1x) | 700x700 | ~5x | on | on | off | 1.33 | 8.08 | 749.5 | 1.836 | 100% | 11% | 60 C | 2000 particles, with particle size of 0.1 by 0.1 in NDC space. 1 minute run. |
+| 2026-11-08 | B | 4dbb38d | 4k Sprites (0.1x) | 700x700 | ~10x | on | on | off | 2.40 | 8.58 | 416.9 | 2.043 | 100% | 14% | 61 C | 4000 particles, with particle size of 0.1 by 0.1 in NDC space. 1 minute run. |
+| 2026-11-08 | B | 4dbb38d | 8k Sprites (0.1x) | 700x700 | ~20x | on | on | off | 4.38 | 10.63 | 228.3 | 2.237 | 100% | 17% | 60 C | 8000 particles, with particle size of 0.1 by 0.1 in NDC space. 1 minute run. |
+| 2026-11-08 | B | 4dbb38d | 10k Sprites (0.1x) | 700x700 | ~25x | on | on | off | 5.37 | 11.83 | 186.0 | 2.279 | 100% | 18% | 60 C | 10000 particles, with particle size of 0.1 by 0.1 in NDC space. 1 minute run. |
+| 2026-11-08 | B | 4dbb38d | 2k Sprites (0.1x), Blend off | 700x700 | ~5x | off | on | off | 1.17 | 7.67 | 854.9 | 2.094 | 100% | 12% | 60 C | 2000 particles, with particle size of 0.1 by 0.1 in NDC space. Blend off. 1 minute run. |
+| 2026-11-08 | B | 4dbb38d | 4k Sprites (0.1x), Blend off | 700x700 | ~10x | off | on | off | 2.38 | 9.03 | 419.4 | 2.055 | 100% | 15% | 60 C | 4000 particles, with particle size of 0.1 by 0.1 in NDC space. Blend off. 1 minute run. |
+| 2026-11-08 | A | n/a | 8k Sprites (0.1x), Blend off | 700x700 | ~20x | off | on | off | 4.45 | 10.57 | 224.6 | 2.201 | 100% | 17% | 60 C | 8000 particles, with particle size of 0.1 by 0.1 in NDC space. Blend off. 1 minute run. |
+| 2026-11-08 | A | n/a | 10k Sprites (0.1x), Blend off | 700x700 | ~25x | off | on | off | 5.38 | 11.57 | 185.9 | 2.277 | 100% | 17% | 60 C | 10000 particles, with particle size of 0.1 by 0.1 in NDC space. Blend off. 1 minute run. |
 
 ## 5. Planned runs
 

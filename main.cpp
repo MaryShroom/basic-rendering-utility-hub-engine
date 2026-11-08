@@ -20,6 +20,9 @@ int main() {
         return -1;
     }
 
+    // Blend toggle
+    BruhEngine::SetBlendEnabled(true);
+
     // Register event listener to toggle VSync on pressing 'V'
     SetEventCallback([](const SDL_Event& e) {
         if (e.type == SDL_KEYDOWN) {
@@ -30,7 +33,7 @@ int main() {
     });
 
     // Initialize 8,000 moving particles
-    const int particleCount = 50000;
+    const int particleCount = 10000;
     std::vector<Particle> particles(particleCount);
     for (int i = 0; i < particleCount; ++i) {
         particles[i].x = ((float)(rand() % 2000) / 1000.0f) - 1.0f; // Random X (-1.0 to 1.0)
@@ -48,7 +51,7 @@ int main() {
 
     // Update this
     float overdrawFactor = ((float)particleCount * (spriteWidth * spriteHeight)) / 4.0f;
-    BruhEngine::SetBenchmarkInfo("60k Sprites (0.1x)", overdrawFactor);
+    BruhEngine::SetBenchmarkInfo("10k Sprites (0.1x)", overdrawFactor);
 
     // Fixed update: move particles and bounce off screen edges
     auto updateLogic = [&](float fixedDt) {

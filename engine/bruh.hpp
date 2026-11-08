@@ -28,4 +28,6 @@ namespace BruhEngine {
 
     // Benchmark
     void SetBenchmarkInfo(const std::string& testName, float overdrawFactor);
+
+    void SetBlendEnabled(bool enabled);
 }
