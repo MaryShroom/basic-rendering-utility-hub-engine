@@ -155,4 +155,8 @@ public:
         m_VertexBufferPtr = m_VertexBufferBase;
         m_IndexCount = 0;
     }
+
+    bool HasPendingDraws() const {
+        return m_IndexCount > 0;
+    }
 };

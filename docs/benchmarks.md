@@ -33,7 +33,7 @@ Only compare runs that share the same window size, overdraw, blending and depth 
 
 ## 3. Test setup (keep identical between comparable runs)
 
-- Window size (fill cost scales with pixels; use a small window for risky tests)
+- Window size (fill cost scales with pixels; use a small window for risky tests) 700 by 700 resolution
 - Sprite count and sprite size
 - Overdraw = total sprite area / window area (1.0 means each pixel drawn once on average)
 - Blending on/off, depth test on/off

@@ -192,6 +192,14 @@ namespace BruhEngine {
             return false;
         }
 
+        // Alpha Blending
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        // // Depth Testing
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+
         // Vsync
         s_VSyncEnabled = true;
         if (SDL_GL_SetSwapInterval(1) < 0) {
@@ -381,13 +389,17 @@ namespace BruhEngine {
         char dateBuf[32];
         std::strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%d", &tmBuffer);
 
+        // --- Query real OpenGL pipeline states ---
+        bool isBlendActive = glIsEnabled(GL_BLEND);
+        bool isDepthActive = glIsEnabled(GL_DEPTH_TEST);
+
         // --- Benchmark Metrics Parameters ---
         std::string pcCol       = "A";
         std::string commitCol   = "n/a";
         std::string testCol     = s_BenchmarkTestName;
         std::string overdrawCol = s_BenchmarkOverdraw;
-        std::string blendCol    = "on";
-        std::string depthCol    = "on";
+        std::string blendCol    = isBlendActive ? "on" : "off";
+        std::string depthCol    = isDepthActive ? "on" : "off";
         std::string vsyncCol    = s_VSyncEnabled ? "on" : "off";
         std::string gpuLoadCol  = GetGPULoadString();
         std::string cpuLoadCol  = GetCPULoadString();
@@ -458,7 +470,10 @@ namespace BruhEngine {
     }
 
     int GetDrawCalls() {
-        return s_DrawCalls;
+        // If there are unflushed quads waiting in the batcher,
+        // they represent at least 1 pending draw call.
+        int pending = (batcher && batcher->HasPendingDraws()) ? 1 : 0;
+        return s_DrawCalls + pending;
     }
 
     void IncrementDrawCalls() {
