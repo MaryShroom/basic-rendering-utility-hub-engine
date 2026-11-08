@@ -68,8 +68,9 @@ Runs from before these columns existed show n/a.
 | 2026-11-08 | B | 4dbb38d | 10k Sprites (0.1x) | 700x700 | ~25x | on | on | off | 5.37 | 11.83 | 186.0 | 2.279 | 100% | 18% | 60 C | 10000 particles, with particle size of 0.1 by 0.1 in NDC space. 1 minute run. (Invalid run due to misread GPU load) |
 | 2026-11-08 | B | 4dbb38d | 2k Sprites (0.1x), Blend off | 700x700 | ~5x | off | on | off | 1.17 | 7.67 | 854.9 | 2.094 | 100% | 12% | 60 C | 2000 particles, with particle size of 0.1 by 0.1 in NDC space. Blend off. 1 minute run. (Invalid run due to misread GPU load) |
 | 2026-11-08 | B | 4dbb38d | 4k Sprites (0.1x), Blend off | 700x700 | ~10x | off | on | off | 2.38 | 9.03 | 419.4 | 2.055 | 100% | 15% | 60 C | 4000 particles, with particle size of 0.1 by 0.1 in NDC space. Blend off. 1 minute run. (Invalid run due to misread GPU load) |
-| 2026-11-08 | B | n/a | 8k Sprites (0.1x), Blend off | 700x700 | ~20x | off | on | off | 4.45 | 10.57 | 224.6 | 2.201 | 100% | 17% | 60 C | 8000 particles, with particle size of 0.1 by 0.1 in NDC space. Blend off. 1 minute run. (Invalid run due to misread GPU load) |
-| 2026-11-08 | B | n/a | 10k Sprites (0.1x), Blend off | 700x700 | ~25x | off | on | off | 5.38 | 11.57 | 185.9 | 2.277 | 100% | 17% | 60 C | 10000 particles, with particle size of 0.1 by 0.1 in NDC space. Blend off. 1 minute run. (Invalid run due to misread GPU load) |
+| 2026-11-08 | B | 4dbb38d | 8k Sprites (0.1x), Blend off | 700x700 | ~20x | off | on | off | 4.45 | 10.57 | 224.6 | 2.201 | 100% | 17% | 60 C | 8000 particles, with particle size of 0.1 by 0.1 in NDC space. Blend off. 1 minute run. (Invalid run due to misread GPU load) |
+| 2026-11-08 | B | 4dbb38d | 10k Sprites (0.1x), Blend off | 700x700 | ~25x | off | on | off | 5.38 | 11.57 | 185.9 | 2.277 | 100% | 17% | 60 C | 10000 particles, with particle size of 0.1 by 0.1 in NDC space. Blend off. 1 minute run. (Invalid run due to misread GPU load) |
+| 2026-11-08 | B | c157439 | 100000 Sprites (0.1x) | 700x700 | ~250x | on | on | off | 43.40 | 52.49 | 23.0 | 2.819 | 0% | 17% | 60 C | 100000 paticles, baseline for PC-B. |
 
 ## 5. Planned runs
 

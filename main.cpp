@@ -32,8 +32,8 @@ int main() {
         }
     });
 
-    // Initialize 8,000 moving particles
-    const int particleCount = 10000;
+    // Initialize however many moving particles
+    const int particleCount = 100000; // Switch to 4000 (10x) or 8000 (20x) as needed
     std::vector<Particle> particles(particleCount);
     for (int i = 0; i < particleCount; ++i) {
         particles[i].x = ((float)(rand() % 2000) / 1000.0f) - 1.0f; // Random X (-1.0 to 1.0)
@@ -50,8 +50,10 @@ int main() {
     float spriteHeight = 0.1f;
 
     // Update this
+    std::string testDescription = std::to_string(particleCount) + " Sprites (0.1x)";
+
     float overdrawFactor = ((float)particleCount * (spriteWidth * spriteHeight)) / 4.0f;
-    BruhEngine::SetBenchmarkInfo("10k Sprites (0.1x)", overdrawFactor);
+    BruhEngine::SetBenchmarkInfo(testDescription, overdrawFactor);
 
     // Fixed update: move particles and bounce off screen edges
     auto updateLogic = [&](float fixedDt) {
