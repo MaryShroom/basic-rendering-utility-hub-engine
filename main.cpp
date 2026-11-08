@@ -15,6 +15,7 @@ int main() {
 
     // Fixed update callback
     auto updateLogic = [](float fixedDt) {
+        (void)fixedDt;
         squarePosX += 0.5f * fixedDt;
 
         // Update window title every frame (or rate-limited)

@@ -4,6 +4,7 @@
 #include "VertexBuffer.hpp"
 #include "Texture.hpp"
 #include "IndexBuffer.hpp"
+#include "SpriteBatcher.hpp"
 
 #include <SDL.h>
 #include <glad/gl.h>
@@ -16,12 +17,13 @@ namespace BruhEngine {
     static SDL_GLContext glContext = nullptr;
     static bool isRunning = false;
 
-    // Engine-managed OpenGL pipeline resources for the triangle
+    // Engine-managed OpenGL pipeline resources
     static Shader* shader = nullptr;
     static VertexBuffer* vbo = nullptr;
     static VertexArray* vao = nullptr;
     static IndexBuffer* ibo = nullptr;
     static Texture* texture = nullptr;
+    static SpriteBatcher* batcher = nullptr;
 
     // Vertex and Fragment
     const char* vertexShaderSource = "#version 330 core\n"
@@ -113,6 +115,9 @@ namespace BruhEngine {
         // Create procedural texture
         texture = new Texture(64, 64);
 
+        // Batcher
+        batcher = new SpriteBatcher();
+
         // 4 Vertices: Position (X, Y), Color (R, G, B), UV (U, V)
         float quadVertices[] = {
             // Position     // Color          // UV
@@ -166,12 +171,19 @@ namespace BruhEngine {
         glClearColor(0.1f, 0.12f, 0.16f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        texture->Bind(0);
-        shader->Bind();
-        shader->SetUniform1f("u_Texture", 0);
-        vao->Bind();
-        ibo->Bind();
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+        batcher->BeginBatch();
+
+        // Draw multiple sprites anywhere on screen with one batch!
+        float white[3] = { 1.0f, 1.0f, 1.0f };
+        float red[3]   = { 1.0f, 0.2f, 0.2f };
+        float blue[3]  = { 0.2f, 0.5f, 1.0f };
+
+        batcher->DrawQuad(-0.6f, -0.4f, 0.4f, 0.4f, white); // Textured sprite
+        batcher->DrawQuad( 0.1f, -0.4f, 0.3f, 0.5f, red);   // Red tinted sprite
+        batcher->DrawQuad(-0.2f,  0.1f, 0.5f, 0.3f, blue);  // Blue tinted sprite
+
+        batcher->EndBatch();
+        batcher->Flush(*shader, *texture);
     }
 
     void Run(std::function<void(float fixedDeltaTime)> updateFunc, std::function<void()> renderFunc) {
@@ -225,12 +237,14 @@ namespace BruhEngine {
         delete ibo;
         delete vao;
         delete texture;
+        delete batcher;
 
         shader = nullptr;
         vbo = nullptr;
         ibo = nullptr;
         vao = nullptr;
         texture = nullptr;
+        batcher = nullptr;
 
         if (glContext) SDL_GL_DeleteContext(glContext);
         if (window) SDL_DestroyWindow(window);
