@@ -1,0 +1,43 @@
+#pragma once
+#include <string>
+#include <fstream>
+#include <chrono>
+#include <thread>
+#include <mutex>
+#include <atomic>
+
+class TelemetryMonitor {
+public:
+    void Init();
+    void Shutdown(); // Clean up thread on exit
+    void Update(double frameTime);
+
+    // Thread-safe getters
+    float GetFPS() const { return m_FPS; }
+    float GetFrameTimeMs() const { return m_FrameTimeMs; }
+    std::string GetGPULoad() const;
+    std::string GetGPUTemp() const;
+    std::string GetCPULoad() const;
+    float GetGpixPerSec() const { return m_GpixPerSec; }
+
+    void CalculateGpix(float screenWidth, float screenHeight, float overdrawFactor);
+
+private:
+    void PollLoop(); // Background thread function
+
+    float m_FrameTimeMs = 0.0f;
+    float m_FPS = 0.0f;
+    float m_GpixPerSec = 0.0f;
+
+    // Thread synchronization & caching
+    std::thread m_WorkerThread;
+    std::atomic<bool> m_Running{false};
+    mutable std::mutex m_DataMutex;
+
+    std::string m_CachedGPULoad = "N/A";
+    std::string m_CachedGPUTemp = "N/A";
+
+    // Internal file-reading helpers
+    std::string ReadGPULoad() const;
+    std::string ReadGPUTemp() const;
+};

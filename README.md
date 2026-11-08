@@ -1,5 +1,5 @@
-# my-game-engine
-my game engine
+# Basic Rendering Utility Hub
+Basic Rendering Utility Hub Engine, or BRUH Engine for short.
 
 ## Development Tools
 ### Ubuntu 24.04

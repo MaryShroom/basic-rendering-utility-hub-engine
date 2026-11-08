@@ -1,4 +1,6 @@
 #include "engine/bruh.hpp"
+#include "engine/TelemetryMonitor.hpp"
+#include "engine/BenchmarkRunner.hpp"
 
 #include "imgui.h"
 
@@ -16,12 +18,32 @@ struct Particle {
 };
 
 int main() {
-    if (!Init("BruhEngine - Stress Test", 700, 700)) {
+    int winW = 700, winH = 700;
+
+    if (!Init("BruhEngine - Stress Test", winW, winH)) {
         return -1;
     }
 
-    // Blend toggle
-    BruhEngine::SetBlendEnabled(true);
+    // Particles count
+    const int particleCount = 2000; // Switch to 4000 (10x) or 8000 (20x) as needed
+
+    // Benchmark and Telemetry Opt-In
+    bool enableBenchmarkMode = true;
+
+    TelemetryMonitor telemetry;
+    telemetry.Init();
+
+    BenchmarkRunner benchmark;
+    if (enableBenchmarkMode) {
+        float spriteWidth = 0.1f;
+        float spriteHeight = 0.1f;
+        float overdrawFactor = ((float)particleCount * (spriteWidth * spriteHeight)) / 4.0f;
+
+        benchmark.Configure(true, std::to_string(particleCount) + " Sprites (0.1x)", overdrawFactor);
+        BruhEngine::SetBlendEnabled(true); // Toggle blend for fill-rate testing
+    } else {
+        BruhEngine::SetBlendEnabled(true);
+    }
 
     // Register event listener to toggle VSync on pressing 'V'
     SetEventCallback([](const SDL_Event& e) {
@@ -33,7 +55,6 @@ int main() {
     });
 
     // Initialize however many moving particles
-    const int particleCount = 100000; // Switch to 4000 (10x) or 8000 (20x) as needed
     std::vector<Particle> particles(particleCount);
     for (int i = 0; i < particleCount; ++i) {
         particles[i].x = ((float)(rand() % 2000) / 1000.0f) - 1.0f; // Random X (-1.0 to 1.0)
@@ -49,14 +70,23 @@ int main() {
     float spriteWidth = 0.1f;
     float spriteHeight = 0.1f;
 
-    // Update this
-    std::string testDescription = std::to_string(particleCount) + " Sprites (0.1x)";
-
     float overdrawFactor = ((float)particleCount * (spriteWidth * spriteHeight)) / 4.0f;
-    BruhEngine::SetBenchmarkInfo(testDescription, overdrawFactor);
+    BruhEngine::SetBenchmarkInfo(std::to_string(particleCount) + " Sprites (0.1x)", overdrawFactor);
+
+    bool isRunning = true;
 
     // Fixed update: move particles and bounce off screen edges
     auto updateLogic = [&](float fixedDt) {
+        if (!benchmark.EvaluateFrame(fixedDt, isRunning)) {
+            return;
+        }
+
+        telemetry.Update(fixedDt);
+        benchmark.RecordFrameTime((float)(fixedDt * 1000.0));
+
+        // Get current window size
+        BruhEngine::GetWindowSize(&winW, &winH);
+
         for (auto& p : particles) {
             p.x += p.vx * fixedDt;
             p.y += p.vy * fixedDt;
@@ -69,14 +99,7 @@ int main() {
 
     // Custom render logic: what to draw each frame
     auto renderLogic = [&]() {
-        // --- Overdraw Calculation ---
-        float screenArea = 4.0f; // NDC space width (2) * height (2)
-        float totalSpriteArea = (float)particleCount * (spriteWidth * spriteHeight);
-        float overdrawFactor = totalSpriteArea / screenArea;
-        // ----------------------------
-
         // --- Window Resolution & Pixels Calculation ---
-        int winW = 700, winH = 700;
         BruhEngine::GetWindowSize(&winW, &winH);
         double windowPixels = (double)(winW * winH);
 
@@ -131,6 +154,8 @@ int main() {
     // Run engine loop with custom update and render callbacks
     Run(updateLogic, renderLogic);
 
+    benchmark.FinalizeAndPrint();
+    telemetry.Shutdown();
     Shutdown();
     return 0;
 }

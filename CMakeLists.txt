@@ -58,6 +58,8 @@ target_link_libraries(imgui PUBLIC SDL2::SDL2)
 add_executable(BasicRenderingUtilityHub
     main.cpp
     engine/bruh.cpp
+    engine/TelemetryMonitor.cpp
+    engine/BenchmarkRunner.cpp
     thirdparty/glad/src/gl.c
 )
 
