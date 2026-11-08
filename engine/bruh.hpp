@@ -8,4 +8,13 @@ namespace BruhEngine {
     void SetWindowTitle(const std::string& title);
     void GetWindowSize(int* w, int* h);
     void Shutdown();
+
+    // Draw Calls
+    int GetDrawCalls();
+    void IncrementDrawCalls();
+
+    // Batching hook
+    void BeginBatch();
+    void DrawQuad(float x, float y, float width, float height, const float color[3]);
+    void EndBatch();
 }

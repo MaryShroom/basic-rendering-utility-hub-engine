@@ -16,7 +16,7 @@ struct SpriteVertex {
 
 class SpriteBatcher {
 private:
-    static const uint32_t MaxSprites = 1000;
+    static const uint32_t MaxSprites = 10000;
     static const uint32_t MaxVertices = MaxSprites * 4;
     static const uint32_t MaxIndices = MaxSprites * 6;
 
@@ -134,5 +134,7 @@ public:
         m_VertexArray->Bind();
         m_IndexBuffer->Bind();
         glDrawElements(GL_TRIANGLES, m_IndexCount, GL_UNSIGNED_INT, nullptr);
+
+        BruhEngine::IncrementDrawCalls();
     }
 };

@@ -16,6 +16,7 @@ namespace BruhEngine {
     static SDL_Window* window = nullptr;
     static SDL_GLContext glContext = nullptr;
     static bool isRunning = false;
+    static int s_DrawCalls = 0;
 
     // Engine-managed OpenGL pipeline resources
     static Shader* shader = nullptr;
@@ -213,6 +214,9 @@ namespace BruhEngine {
                 accumulator -= fixedDt;
             }
 
+            // Reset draw call counter at the start of the frame draw phase
+            s_DrawCalls = 0;
+
             // Render (use engine render if main.cpp did not provide one)
             if (renderFunc) renderFunc();
             else Render();
@@ -250,5 +254,28 @@ namespace BruhEngine {
         if (window) SDL_DestroyWindow(window);
         SDL_Quit();
         std::cout << "BruhEngine Shut Down Cleanly.\n";
+    }
+
+    int GetDrawCalls() {
+        return s_DrawCalls;
+    }
+
+    void IncrementDrawCalls() {
+        s_DrawCalls++;
+    }
+
+    void BeginBatch() {
+        if (batcher) batcher->BeginBatch();
+    }
+
+    void DrawQuad(float x, float y, float width, float height, const float color[3]) {
+        if (batcher) batcher->DrawQuad(x, y, width, height, color);
+    }
+
+    void EndBatch() {
+        if (batcher) {
+            batcher->EndBatch();
+            batcher->Flush(*shader, *texture);
+        }
     }
 }

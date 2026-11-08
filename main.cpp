@@ -15,11 +15,11 @@ int main() {
 
     // Fixed update callback
     auto updateLogic = [](float fixedDt) {
-        (void)fixedDt;
         squarePosX += 0.5f * fixedDt;
 
         // Update window title every frame (or rate-limited)
-        std::string title = "BruhEngine | squarePosX: " + std::to_string(squarePosX);
+        int drawCalls = GetDrawCalls();
+        std::string title = "BruhEngine | Pos: " + std::to_string(squarePosX) + " | DrawCalls: " + std::to_string(drawCalls);
         SetWindowTitle(title);
     };
 
