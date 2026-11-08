@@ -63,6 +63,14 @@ namespace BruhEngine {
         "   FragColor = texture(u_Texture, TexCoord) * vec4(fragColor, 1.0);\n"
         "}\n";
 
+    static std::string s_BenchmarkTestName = "Default Test";
+    static std::string s_BenchmarkOverdraw = "n/a";
+
+    void SetBenchmarkInfo(const std::string& testName, const std::string& overdrawStr) {
+        s_BenchmarkTestName = testName;
+        s_BenchmarkOverdraw = overdrawStr;
+    }
+
     bool Init(const char* title, int width, int height) {
         // Initialize SDL
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -206,19 +214,21 @@ namespace BruhEngine {
         glClearColor(0.1f, 0.12f, 0.16f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        batcher->BeginBatch();
+        if (batcher && shader && texture) {
+            batcher->BeginBatch(*shader, *texture);
 
-        // Draw multiple sprites anywhere on screen with one batch!
-        float white[3] = { 1.0f, 1.0f, 1.0f };
-        float red[3]   = { 1.0f, 0.2f, 0.2f };
-        float blue[3]  = { 0.2f, 0.5f, 1.0f };
+            // Draw multiple sprites anywhere on screen with one batch!
+            float white[3] = { 1.0f, 1.0f, 1.0f };
+            float red[3]   = { 1.0f, 0.2f, 0.2f };
+            float blue[3]  = { 0.2f, 0.5f, 1.0f };
 
-        batcher->DrawQuad(-0.6f, -0.4f, 0.4f, 0.4f, white); // Textured sprite
-        batcher->DrawQuad( 0.1f, -0.4f, 0.3f, 0.5f, red);   // Red tinted sprite
-        batcher->DrawQuad(-0.2f,  0.1f, 0.5f, 0.3f, blue);  // Blue tinted sprite
+            batcher->DrawQuad(-0.6f, -0.4f, 0.4f, 0.4f, white); // Textured sprite
+            batcher->DrawQuad( 0.1f, -0.4f, 0.3f, 0.5f, red);   // Red tinted sprite
+            batcher->DrawQuad(-0.2f,  0.1f, 0.5f, 0.3f, blue);  // Blue tinted sprite
 
-        batcher->EndBatch();
-        batcher->Flush(*shader, *texture);
+            batcher->EndBatch();
+            batcher->Flush();
+        }
     }
 
     void Run(std::function<void(float fixedDeltaTime)> updateFunc, std::function<void()> renderFunc) {
@@ -302,8 +312,8 @@ namespace BruhEngine {
         // --- Benchmark Metrics Parameters ---
         std::string pcCol       = "A";
         std::string commitCol   = "n/a";
-        std::string testCol     = "100k Sprites (1.0x)";
-        std::string overdrawCol = "~25000x";
+        std::string testCol     = s_BenchmarkTestName;
+        std::string overdrawCol = s_BenchmarkOverdraw;
         std::string blendCol    = "on";
         std::string depthCol    = "on";
         std::string vsyncCol    = s_VSyncEnabled ? "on" : "off";
@@ -393,12 +403,11 @@ namespace BruhEngine {
 
         s_DrawCalls = 0;
 
-        // Start the ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
-        if (batcher) batcher->BeginBatch();
+        if (batcher && shader && texture) batcher->BeginBatch(*shader, *texture);
     }
 
     void DrawQuad(float x, float y, float width, float height, const float color[3]) {
@@ -408,7 +417,7 @@ namespace BruhEngine {
     void EndBatch() {
         if (batcher) {
             batcher->EndBatch();
-            batcher->Flush(*shader, *texture);
+            batcher->Flush();
         }
 
         // Render ImGui draw data over the engine scene

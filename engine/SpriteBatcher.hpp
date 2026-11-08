@@ -28,6 +28,9 @@ private:
     SpriteVertex* m_VertexBufferBase = nullptr;
     SpriteVertex* m_VertexBufferPtr = nullptr;
 
+    Shader* m_ActiveShader = nullptr;
+    Texture* m_ActiveTexture = nullptr;
+
 public:
     SpriteBatcher() {
         m_VertexBufferBase = new SpriteVertex[MaxVertices];
@@ -78,13 +81,15 @@ public:
         delete[] m_VertexBufferBase;
     }
 
-    void BeginBatch() {
+    void BeginBatch(Shader& shader, Texture& texture) {
         m_VertexBufferPtr = m_VertexBufferBase;
         m_IndexCount = 0;
+        m_ActiveShader = &shader;
+        m_ActiveTexture = &texture;
     }
 
     void DrawQuad(float x, float y, float width, float height, const float color[3], float texID = 0.0f) {
-        if (m_IndexCount >= MaxIndices) return; // Prevent overflow
+        if (m_IndexCount >= MaxIndices) Flush(); // Prevent overflow
 
         // Bottom-Left
         m_VertexBufferPtr->Position[0] = x;
@@ -122,16 +127,23 @@ public:
     }
 
     void EndBatch() {
-        uint32_t dataSize = (uint32_t)((uint8_t*)m_VertexBufferPtr - (uint8_t*)m_VertexBufferBase);
-        m_VertexBuffer->SetData(m_VertexBufferBase, dataSize);
+        // Upload any remaining data in the buffer before final flush
+        if (m_IndexCount > 0) {
+            uint32_t dataSize = (uint32_t)((uint8_t*)m_VertexBufferPtr - (uint8_t*)m_VertexBufferBase);
+            m_VertexBuffer->SetData(m_VertexBufferBase, dataSize);
+        }
     }
 
-    void Flush(Shader& shader, Texture& texture) {
+    void Flush() {
         if (m_IndexCount == 0) return;
 
-        texture.Bind(0);
-        shader.Bind();
-        shader.SetUniform1f("u_Texture", 0);
+        // Upload current buffer chunk
+        uint32_t dataSize = (uint32_t)((uint8_t*)m_VertexBufferPtr - (uint8_t*)m_VertexBufferBase);
+        m_VertexBuffer->SetData(m_VertexBufferBase, dataSize);
+
+        m_ActiveTexture->Bind(0);
+        m_ActiveShader->Bind();
+        m_ActiveShader->SetUniform1f("u_Texture", 0);
 
         m_VertexArray->Bind();
         m_IndexBuffer->Bind();
@@ -139,7 +151,8 @@ public:
 
         BruhEngine::IncrementDrawCalls();
 
-        // Reset index count for subsequent batches if needed
+        // Reset index count for next batch chunk
+        m_VertexBufferPtr = m_VertexBufferBase;
         m_IndexCount = 0;
     }
 };

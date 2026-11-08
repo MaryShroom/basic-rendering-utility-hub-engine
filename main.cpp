@@ -46,6 +46,9 @@ int main() {
     float spriteWidth = 0.1f;
     float spriteHeight = 0.1f;
 
+    float overdrawFactor = (particleCount * (0.1f * 0.1f)) / 4.0f;
+    BruhEngine::SetBenchmarkInfo("60k Sprites (0.1x)", "~" + std::to_string((int)overdrawFactor) + "x");
+
     // Fixed update: move particles and bounce off screen edges
     auto updateLogic = [&](float fixedDt) {
         for (auto& p : particles) {
