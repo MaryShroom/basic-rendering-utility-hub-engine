@@ -13,7 +13,7 @@ struct Particle {
 };
 
 int main() {
-    if (!Init("BruhEngine - Stress Test", 800, 800)) {
+    if (!Init("BruhEngine - Stress Test", 700, 700)) {
         return -1;
     }
 
@@ -40,6 +40,9 @@ int main() {
         particles[i].color[2] = 1.0f;                               // B tint
     }
 
+    float spriteWidth = 0.1f;
+    float spriteHeight = 0.1f;
+
     // Fixed update: move particles and bounce off screen edges
     auto updateLogic = [&](float fixedDt) {
         for (auto& p : particles) {
@@ -51,10 +54,18 @@ int main() {
             if (p.y < -0.95f || p.y > 0.95f) p.vy = -p.vy;
         }
 
+        // --- Overdraw Calculation ---
+        float screenArea = 4.0f; // NDC space width (2) * height (2)
+        float totalSpriteArea = (float)particleCount * (spriteWidth * spriteHeight);
+        float overdrawFactor = totalSpriteArea / screenArea;
+        // ----------------------------
+
         // Display performance stats in title bar
         int drawCalls = GetDrawCalls();
-        std::string title = "BruhEngine | Sprites: " + std::to_string(particleCount) +
-                            " | Draw Calls: " + std::to_string(drawCalls);
+        std::string vsyncStr = IsVSyncEnabled() ? "On" : "Off";
+        std::string title = "BruhEngine | Overdraw: ~" + std::to_string((int)overdrawFactor) +
+                            "x | Draw Calls: " + std::to_string(drawCalls) +
+                            " | VSync: " + vsyncStr;
         SetWindowTitle(title);
     };
 
@@ -62,7 +73,7 @@ int main() {
     auto renderLogic = [&]() {
         BeginBatch();
         for (const auto& p : particles) {
-            DrawQuad(p.x, p.y, 0.025f, 0.025f, p.color);
+            DrawQuad(p.x, p.y, 0.1f, 0.1f, p.color);
         }
         EndBatch();
     };

@@ -43,3 +43,16 @@ Packages (CachyOS)
 sudo pacman -S cmake ninja ccache
 
 Common compromise. Keep one repo until the engine API settles, with the folder split (engine/, game/) enforcing the boundary. Splitting it into two repos later is easy with git subtree split or git filter-repo, and keeps history.
+
+Make the stress tests comparable
+
+Use the same window size, the same random seed, and the same sprite movement each run, and let each test run for several seconds before you read it.
+Write down two numbers per test: the typical frame time and the worst spikes.
+Change one thing at a time. Suggested progression: raise sprite count at the current size; then fix the count and raise sprite size (for example 16, 32, 64, 128 pixels); then toggle alpha blending on and off at a large size.
+Blending matters most. On a weak GPU, large overlapping blended sprites cost a lot of memory bandwidth, and that’s usually where Cedar falls over first.
+
+Finding the bottleneck
+
+Run GALLIUM_HUD=help to list everything your driver can display. Depending on what it exposes, add CPU load, GPU load or draw-call counters to the overlay.
+A simple rule: if frame time grows with sprite count but not with sprite size, you’re CPU-bound (filling the buffer). If it grows with size and overlap, you’re fill-rate bound on the GPU.
+Keep your own CPU-side timer around the update, buffer fill, and swap, so you can tell which stage grew.
