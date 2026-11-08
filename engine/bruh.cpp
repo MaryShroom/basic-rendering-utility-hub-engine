@@ -15,6 +15,11 @@
 #include <iostream>
 #include <functional>
 #include <string>
+#include <fstream>
+#include <chrono>
+#include <vector>
+#include <numeric>
+#include <iomanip>
 
 namespace BruhEngine {
     static SDL_Window* window = nullptr;
@@ -32,6 +37,9 @@ namespace BruhEngine {
     static Texture* texture = nullptr;
     static SpriteBatcher* batcher = nullptr;
 
+    static std::chrono::high_resolution_clock::time_point s_StartTime;
+    static uint64_t s_TotalFrames = 0;
+    static std::vector<float> s_FrameTimes; // In milliseconds
 
     // Vertex and Fragment
     const char* vertexShaderSource = "#version 330 core\n"
@@ -153,6 +161,10 @@ namespace BruhEngine {
         std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << "\n";
         std::cout << "Shading: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
 
+        s_StartTime = std::chrono::high_resolution_clock::now();
+        s_TotalFrames = 0;
+        s_FrameTimes.clear();
+
         // --- Setup Dear ImGui context ---
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -236,6 +248,9 @@ namespace BruhEngine {
                 accumulator -= fixedDt;
             }
 
+            s_TotalFrames++;
+            s_FrameTimes.push_back((float)(frameTime * 1000.0));
+
             // Reset draw call counter at the start of the frame draw phase
             s_DrawCalls = 0;
 
@@ -257,6 +272,69 @@ namespace BruhEngine {
     }
 
     void Shutdown() {
+        // --- Calculate Performance Metrics ---
+        auto endTime = std::chrono::high_resolution_clock::now();
+        double totalDurationSec = std::chrono::duration<double>(endTime - s_StartTime).count();
+        double avgFPS = (totalDurationSec > 0.0) ? (s_TotalFrames / totalDurationSec) : 0.0;
+
+        float avgFrameTimeMs = 0.0f;
+        float worstFrameTimeMs = 0.0f;
+
+        if (!s_FrameTimes.empty()) {
+            double sum = 0.0;
+            for (float ft : s_FrameTimes) {
+                sum += ft;
+                if (ft > worstFrameTimeMs) worstFrameTimeMs = ft;
+            }
+            avgFrameTimeMs = (float)(sum / s_FrameTimes.size());
+        }
+
+        auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        std::tm tmBuffer;
+#if defined(_WIN32)
+        localtime_s(&tmBuffer, &now);
+#else
+        localtime_r(&now, &tmBuffer);
+#endif
+        char dateBuf[32];
+        std::strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%d", &tmBuffer);
+
+        // --- Benchmark Metrics Parameters ---
+        std::string pcCol       = "A";
+        std::string commitCol   = "n/a";
+        std::string testCol     = "100k Sprites (1.0x)";
+        std::string overdrawCol = "~25000x";
+        std::string blendCol    = "on";
+        std::string depthCol    = "on";
+        std::string vsyncCol    = s_VSyncEnabled ? "on" : "off";
+        std::string gpuLoadCol  = "n/a";
+        std::string cpuLoadCol  = "n/a";
+        std::string tempCol     = "n/a";
+        std::string notesCol    = "Automated shutdown baseline run";
+
+        // --- Output Benchmark Row to Terminal ---
+        std::cout << "\n========================================================================================\n";
+        std::cout << "                                BRUHENGINE BENCHMARK RESULT                             \n";
+        std::cout << "========================================================================================\n";
+        std::cout << "| Date | PC | Commit | Test | Overdraw | Blend | Depth | Vsync | Avg ms | Worst ms | FPS | GPU load | CPU load | Temp | Notes |\n";
+        std::cout << "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n";
+        std::cout << "| " << dateBuf
+                  << " | " << pcCol
+                  << " | " << commitCol
+                  << " | " << testCol
+                  << " | " << overdrawCol
+                  << " | " << blendCol
+                  << " | " << depthCol
+                  << " | " << vsyncCol
+                  << " | " << std::fixed << std::setprecision(2) << avgFrameTimeMs
+                  << " | " << worstFrameTimeMs
+                  << " | " << std::setprecision(1) << avgFPS
+                  << " | " << gpuLoadCol
+                  << " | " << cpuLoadCol
+                  << " | " << tempCol
+                  << " | " << notesCol << " |\n";
+        std::cout << "========================================================================================\n\n";
+
         // Cleanup ImGui
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplSDL2_Shutdown();
