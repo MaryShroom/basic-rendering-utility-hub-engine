@@ -1,4 +1,7 @@
 #include "bruh.hpp"
+#include "Shader.hpp"
+#include "VertexArray.hpp"
+#include "VertexBuffer.hpp"
 #include <SDL.h>
 #include <glad/gl.h>
 #include <iostream>
@@ -11,9 +14,9 @@ namespace BruhEngine {
     static bool isRunning = false;
 
     // Engine-managed OpenGL pipeline resources for the triangle
-    static GLuint shaderProgram = 0;
-    static GLuint VAO = 0;
-    static GLuint VBO = 0;
+    static Shader* shader = nullptr;
+    static VertexBuffer* vbo = nullptr;
+    static VertexArray* vao = nullptr;
 
     // Minimal vertex and fragment shaders with color interpolation
     const char* vertexShaderSource = "#version 330 core\n"
@@ -31,21 +34,6 @@ namespace BruhEngine {
         "void main() {\n"
         "   FragColor = vec4(fragColor, 1.0);\n"
         "}\n";
-
-    GLuint CompileShader(GLenum type, const char* source) {
-        GLuint shader = glCreateShader(type);
-        glShaderSource(shader, 1, &source, NULL);
-        glCompileShader(shader);
-
-        GLint success;
-        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            char infoLog[512];
-            glGetShaderInfoLog(shader, 512, NULL, infoLog);
-            std::cerr << "ERROR::SHADER::COMPILATION_FAILED\n" << infoLog << "\n";
-        }
-        return shader;
-    }
 
     bool Init(const char* title, int width, int height) {
         // Initialize SDL
@@ -110,14 +98,7 @@ namespace BruhEngine {
         glViewport(0, 0, drawWidth, drawHeight);
 
         // Compile Shaders
-        GLuint vs = CompileShader(GL_VERTEX_SHADER, vertexShaderSource);
-        GLuint fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
-        shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vs);
-        glAttachShader(shaderProgram, fs);
-        glLinkProgram(shaderProgram);
-        glDeleteShader(vs);
-        glDeleteShader(fs);
+        shader = new Shader(vertexShaderSource, fragmentShaderSource);
 
         // Setup vertex data (VBO & VAO)
         float vertices[] = {
@@ -127,26 +108,9 @@ namespace BruhEngine {
              0.5f, -0.5f,   0.0f, 0.0f, 1.0f  // Bottom-right Blue
         };
 
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
-
-        glBindVertexArray(VAO);
-
-        // Copy vertices array to a buffer for OpenGL
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-        // Set position attribute pointer | location = 0
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-
-        // Set color attribute pointer | location = 1
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
-        glEnableVertexAttribArray(1);
-
-        // Unbind
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
+        vbo = new VertexBuffer(vertices, sizeof(vertices));
+        vao = new VertexArray();
+        vao->AddBuffer(*vbo);
 
         isRunning = true;
         std::cout << "BruhEngine (OpenGL) Loaded Successfully!\n";
@@ -182,10 +146,9 @@ namespace BruhEngine {
         glClearColor(0.1f, 0.12f, 0.16f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
+        shader->Bind();
+        vao->Bind();
         glDrawArrays(GL_TRIANGLES, 0, 3);
-        glBindVertexArray(0);
     }
 
     void Run(std::function<void(float fixedDeltaTime)> updateFunc, std::function<void()> renderFunc) {
@@ -234,9 +197,12 @@ namespace BruhEngine {
 
     void Shutdown() {
         // GPU resources cleanup
-        glDeleteVertexArrays(1, &VAO);
-        glDeleteBuffers(1, &VBO);
-        glDeleteProgram(shaderProgram);
+        delete shader;
+        delete vbo;
+        delete vao;
+        shader = nullptr;
+        vbo = nullptr;
+        vao = nullptr;
 
         if (glContext) SDL_GL_DeleteContext(glContext);
         if (window) SDL_DestroyWindow(window);
