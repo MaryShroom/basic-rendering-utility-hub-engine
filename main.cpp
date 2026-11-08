@@ -30,7 +30,7 @@ int main() {
     });
 
     // Initialize 8,000 moving particles
-    const int particleCount = 40000;
+    const int particleCount = 60000;
     std::vector<Particle> particles(particleCount);
     for (int i = 0; i < particleCount; ++i) {
         particles[i].x = ((float)(rand() % 2000) / 1000.0f) - 1.0f; // Random X (-1.0 to 1.0)
@@ -56,24 +56,16 @@ int main() {
             if (p.x < -0.95f || p.x > 0.95f) p.vx = -p.vx;
             if (p.y < -0.95f || p.y > 0.95f) p.vy = -p.vy;
         }
+    };
 
+    // Custom render logic: what to draw each frame
+    auto renderLogic = [&]() {
         // --- Overdraw Calculation ---
         float screenArea = 4.0f; // NDC space width (2) * height (2)
         float totalSpriteArea = (float)particleCount * (spriteWidth * spriteHeight);
         float overdrawFactor = totalSpriteArea / screenArea;
         // ----------------------------
 
-        // Display performance stats in title bar
-        int drawCalls = GetDrawCalls();
-        std::string vsyncStr = IsVSyncEnabled() ? "On" : "Off";
-        std::string title = "BruhEngine | Overdraw: ~" + std::to_string((int)overdrawFactor) +
-                            "x | Draw Calls: " + std::to_string(drawCalls) +
-                            " | VSync: " + vsyncStr;
-        SetWindowTitle(title);
-    };
-
-    // Custom render logic: what to draw each frame
-    auto renderLogic = [&]() {
         BeginBatch();
         for (const auto& p : particles) {
             DrawQuad(p.x, p.y, 0.1f, 0.1f, p.color);
@@ -81,29 +73,20 @@ int main() {
 
         // --- ImGui Performance HUD Overlay ---
         ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
-        ImGui::SetNextWindowBgAlpha(0.75f); // Semi-transparent
+        ImGui::SetNextWindowBgAlpha(0.75f);
 
         if (ImGui::Begin("Engine Metrics", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav)) {
             ImGuiIO& io = ImGui::GetIO();
 
-            // Frame rate and delta time graph
             ImGui::Text("Performance");
             ImGui::Text("FPS: %.1f (%.3f ms/frame)", io.Framerate, 1000.0f / io.Framerate);
-
             ImGui::Separator();
-
-            // Stress test stats
-            float screenArea = 4.0f;
-            float totalSpriteArea = (float)particleCount * (spriteWidth * spriteHeight);
-            float overdrawFactor = totalSpriteArea / screenArea;
 
             ImGui::Text("Active Sprites: %d", particleCount);
             ImGui::Text("Draw Calls: %d", GetDrawCalls());
             ImGui::Text("Est. Overdraw: ~%.0fx", overdrawFactor);
-
             ImGui::Separator();
 
-            // Interactive VSync control
             bool vsync = IsVSyncEnabled();
             if (ImGui::Checkbox("VSync Enabled", &vsync)) {
                 SetVSync(vsync);
@@ -113,6 +96,14 @@ int main() {
         }
 
         EndBatch();
+
+        // Display performance stats in title bar
+        int drawCalls = GetDrawCalls();
+        std::string vsyncStr = IsVSyncEnabled() ? "On" : "Off";
+        std::string title = "BruhEngine | Overdraw: ~" + std::to_string((int)overdrawFactor) +
+                            "x | Draw Calls: " + std::to_string(drawCalls) +
+                            " | VSync: " + vsyncStr;
+        SetWindowTitle(title);
     };
 
     // Run engine loop with custom update and render callbacks

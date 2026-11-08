@@ -16,7 +16,7 @@ struct SpriteVertex {
 
 class SpriteBatcher {
 private:
-    static const uint32_t MaxSprites = 100000;
+    static const uint32_t MaxSprites = 10000;
     static const uint32_t MaxVertices = MaxSprites * 4;
     static const uint32_t MaxIndices = MaxSprites * 6;
 
@@ -127,6 +127,8 @@ public:
     }
 
     void Flush(Shader& shader, Texture& texture) {
+        if (m_IndexCount == 0) return;
+
         texture.Bind(0);
         shader.Bind();
         shader.SetUniform1f("u_Texture", 0);
@@ -136,5 +138,8 @@ public:
         glDrawElements(GL_TRIANGLES, m_IndexCount, GL_UNSIGNED_INT, nullptr);
 
         BruhEngine::IncrementDrawCalls();
+
+        // Reset index count for subsequent batches if needed
+        m_IndexCount = 0;
     }
 };
