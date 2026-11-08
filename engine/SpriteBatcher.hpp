@@ -16,7 +16,7 @@ struct SpriteVertex {
 
 class SpriteBatcher {
 private:
-    static const uint32_t MaxSprites = 10000;
+    static const uint32_t MaxSprites = 100000;
     static const uint32_t MaxVertices = MaxSprites * 4;
     static const uint32_t MaxIndices = MaxSprites * 6;
 

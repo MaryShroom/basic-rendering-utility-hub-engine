@@ -27,7 +27,7 @@ int main() {
     });
 
     // Initialize 8,000 moving particles
-    const int particleCount = 10000;
+    const int particleCount = 40000;
     std::vector<Particle> particles(particleCount);
     for (int i = 0; i < particleCount; ++i) {
         particles[i].x = ((float)(rand() % 2000) / 1000.0f) - 1.0f; // Random X (-1.0 to 1.0)

@@ -36,4 +36,6 @@ cmake --build build-release
 # With HUD
 GALLIUM_HUD="fps,frametime" ./build-debug/BasicRenderingUtilityHub
 GALLIUM_HUD="fps,frametime" ./build-release/BasicRenderingUtilityHub
+
+GALLIUM_HUD=".w1.h1fps+cpu+GPU-load+temperature,.w200.h200frametime;.w1.h1requested-VRAM+VRAM-usage"
 ```
