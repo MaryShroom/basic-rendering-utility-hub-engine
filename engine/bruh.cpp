@@ -327,6 +327,16 @@ namespace BruhEngine {
             double frameTime = (double)(currentCounter - lastCounter) / (double)counterFrequency;
             lastCounter = currentCounter;
 
+            // --- AUTOMATIC CUT-OFF (>100 ms HITCH) ---
+            if (frameTime > 0.100) {
+                std::cerr << "\n[BruhEngine] CRITICAL: Frame time exceeded 100ms ("
+                << std::fixed << std::setprecision(2) << (frameTime * 1000.0)
+                << " ms). Automatic cut-off triggered.\n";
+                isRunning = false;
+                break;
+            }
+            // -----------------------------------------
+
             // Prevent die if a frame takes too long
             if (frameTime > 0.25) frameTime = 0.25;
 
