@@ -11,7 +11,7 @@ namespace BruhEngine {
     void Shutdown();
 
     // VSync controls
-    void SetVSync(bool enabled);
+    bool SetVSync(bool enabled);
     bool IsVSyncEnabled();
 
     // Draw Calls

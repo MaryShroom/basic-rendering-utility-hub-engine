@@ -81,11 +81,7 @@ int main() {
             return;
         }
 
-        telemetry.Update(fixedDt);
         benchmark.RecordFrameTime((float)(fixedDt * 1000.0));
-
-        // Get current window size
-        BruhEngine::GetWindowSize(&winW, &winH);
 
         for (auto& p : particles) {
             p.x += p.vx * fixedDt;
@@ -99,9 +95,15 @@ int main() {
 
     // Custom render logic: what to draw each frame
     auto renderLogic = [&]() {
-        // --- Window Resolution & Pixels Calculation ---
+        float realFps = ImGui::GetIO().Framerate;
+        float realFrameTime = (realFps > 0.0f) ? (1.0f / realFps) : 0.0f;
+
+        telemetry.Update(realFrameTime);
+
         BruhEngine::GetWindowSize(&winW, &winH);
-        double windowPixels = (double)(winW * winH);
+        telemetry.CalculateGpix((float)winW, (float)winH, overdrawFactor);
+
+        BruhEngine::GetWindowSize(&winW, &winH);
 
         BeginBatch();
         for (const auto& p : particles) {
@@ -113,22 +115,24 @@ int main() {
         ImGui::SetNextWindowBgAlpha(0.75f);
 
         if (ImGui::Begin("Engine Metrics", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav)) {
-            ImGuiIO& io = ImGui::GetIO();
-            double fps = io.Framerate;
-
-            // Pixels Drawn Per Second Formula: Overdraw × Window Pixels × FPS
-            double pixelsPerSec = (double)overdrawFactor * windowPixels * fps;
+            float fps = telemetry.GetFPS();
+            float frameTimeMs = telemetry.GetFrameTimeMs();
 
             ImGui::Text("Performance");
-            ImGui::Text("FPS: %.1f (%.3f ms/frame)", fps, 1000.0f / fps);
+            ImGui::Text("FPS: %.1f (%.3f ms/frame)", fps, frameTimeMs);
+            ImGui::Separator();
+
+            // Hardware Telemetry
+            ImGui::Text("GPU Load: %s", telemetry.GetGPULoad().c_str());
+            ImGui::Text("GPU Temp: %s", telemetry.GetGPUTemp().c_str());
             ImGui::Separator();
 
             ImGui::Text("Active Sprites: %d", particleCount);
             ImGui::Text("Draw Calls: %d", GetDrawCalls());
             ImGui::Text("Est. Overdraw: ~%.0fx", overdrawFactor);
 
-            // Display in Megapixels per second for readability (e.g., Mpx/s)
-            ImGui::Text("Pixels/sec: %.2f Mpx/s", pixelsPerSec / 1'000'000.0);
+            // Display in Gigapixels per second for readability (e.g., Gpix/s)
+            ImGui::Text("Throughput: %.3f Gpix/s", telemetry.GetGpixPerSec());
 
             ImGui::Separator();
 
