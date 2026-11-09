@@ -248,7 +248,8 @@ namespace BruhEngine {
             lastCounter = currentCounter;
 
             // --- AUTOMATIC CUT-OFF (>100 ms HITCH) ---
-            if (frameTime > 0.100) {
+            double engineUptime = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - s_StartTime).count();
+            if (frameTime > 0.100 && engineUptime > 2.0) {
                 std::cerr << "\n[BruhEngine] CRITICAL: Frame time exceeded 100ms ("
                 << std::fixed << std::setprecision(2) << (frameTime * 1000.0)
                 << " ms). Automatic cut-off triggered.\n";
