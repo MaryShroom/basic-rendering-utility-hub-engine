@@ -3,6 +3,8 @@
 #include <vector>
 #include <fstream>
 
+#include "HardwareSampler.hpp"
+
 class BenchmarkRunner {
 public:
     void Configure(bool enabled, std::string testName, float expectedOverdraw,
@@ -51,7 +53,5 @@ private:
     bool m_BenchmarkComplete = false;
 
     // CPU delta state tracking
-    unsigned long long m_LastCpuActive = 0;
-    unsigned long long m_LastCpuTotal = 0;
-    bool m_InitializedCpuStats = false;
+    HardwareSampler m_Sampler;
 };

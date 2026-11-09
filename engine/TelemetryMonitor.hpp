@@ -8,6 +8,8 @@
 #include <chrono>
 #include <functional>
 
+#include "HardwareSampler.hpp"
+
 class TelemetryMonitor {
 public:
     void Init();
@@ -51,8 +53,7 @@ private:
     std::string m_CachedGPUTemp = "N/A";
 
     // Internal file-reading helpers
-    std::string ReadGPULoad() const;
-    std::string ReadGPUTemp() const;
+    HardwareSampler m_Sampler;
 
     float m_GpixTimer = 0.0f;
 

@@ -60,6 +60,7 @@ add_executable(BasicRenderingUtilityHub
     engine/bruh.cpp
     engine/TelemetryMonitor.cpp
     engine/BenchmarkRunner.cpp
+    engine/HardwareSampler.cpp
     thirdparty/glad/src/gl.c
 )
 

@@ -68,69 +68,16 @@ bool BenchmarkRunner::EvaluateFrame(double frameTime, bool& isRunning) {
 }
 
 void BenchmarkRunner::SampleHardware() {
-    // Read CPU Load from /proc/stat
-    {
-        std::ifstream statFile("/proc/stat");
-        if (statFile.is_open()) {
-            std::string cpu;
-            unsigned long long user, nice, system, idle, iowait, irq, softirq, steal;
-            statFile >> cpu >> user >> nice >> system >> idle >> iowait >> irq >> softirq >> steal;
-            unsigned long long active = user + nice + system + irq + softirq + steal;
-            unsigned long long total = active + idle + iowait;
+    HardwareMetrics metrics = m_Sampler.Sample();
 
-            if (m_InitializedCpuStats) {
-                unsigned long long deltaActive = active - m_LastCpuActive;
-                unsigned long long deltaTotal = total - m_LastCpuTotal;
-                if (deltaTotal > 0) {
-                    double cpuLoad = (double)deltaActive / (double)deltaTotal * 100.0;
-                    m_CPULoadSamples.push_back(cpuLoad);
-                }
-            }
-            m_LastCpuActive = active;
-            m_LastCpuTotal = total;
-            m_InitializedCpuStats = true;
-        }
+    if (metrics.cpuLoad >= 0.0) {
+        m_CPULoadSamples.push_back(metrics.cpuLoad);
     }
-
-    // Read GPU Load from /sys/class/drm/card*/device/gpu_busy_percent
-    for (int i = 0; i <= 2; ++i) {
-        std::string path = "/sys/class/drm/card" + std::to_string(i) + "/device/gpu_busy_percent";
-        std::ifstream file(path);
-        if (file.is_open()) {
-            std::string valStr;
-            std::getline(file, valStr);
-            valStr.erase(0, valStr.find_first_not_of(" \n\r\t"));
-            valStr.erase(valStr.find_last_not_of(" \n\r\t") + 1);
-            try {
-                int busy = std::stoi(valStr);
-                if (busy >= 0 && busy <= 100) {
-                    m_GPULoadSamples.push_back((double)busy);
-                    break;
-                }
-            } catch (...) {}
-        }
+    if (metrics.gpuLoad >= 0.0) {
+        m_GPULoadSamples.push_back(metrics.gpuLoad);
     }
-
-    // Read GPU Temp from /sys/class/hwmon/hwmon*/temp1_input
-    for (int i = 0; i < 10; ++i) {
-        std::string hwmonDir = "/sys/class/hwmon/hwmon" + std::to_string(i) + "/";
-        std::ifstream nameFile(hwmonDir + "name");
-        if (nameFile.is_open()) {
-            std::string driverName;
-            nameFile >> driverName;
-            if (driverName == "amdgpu" || driverName == "nvidia" || driverName == "nouveau") {
-                std::ifstream tempFile(hwmonDir + "temp1_input");
-                if (tempFile.is_open()) {
-                    long long tempMilliC;
-                    tempFile >> tempMilliC;
-                    double tempC = tempMilliC / 1000.0;
-                    if (tempC > 0 && tempC < 150) {
-                        m_GPUTempSamples.push_back(tempC);
-                        break;
-                    }
-                }
-            }
-        }
+    if (metrics.gpuTemp > 0.0) {
+        m_GPUTempSamples.push_back(metrics.gpuTemp);
     }
 }
 

@@ -18,15 +18,17 @@ void TelemetryMonitor::Shutdown() {
 
 void TelemetryMonitor::PollLoop() {
     while (m_Running) {
+        HardwareMetrics metrics = m_Sampler.Sample();
+
         // Fetch hardware stats in the background without affecting render performance
-        std::string gpuLoad = ReadGPULoad();
-        std::string gpuTemp = ReadGPUTemp();
+        std::string gpuLoadStr = (metrics.gpuLoad >= 0.0) ? std::to_string((int)metrics.gpuLoad) + "%" : "N/A";
+        std::string gpuTempStr = (metrics.gpuTemp > 0.0) ? std::to_string((int)metrics.gpuTemp) + " C" : "N/A";
 
         // Safely update cached values
         {
             std::lock_guard<std::mutex> lock(m_DataMutex);
-            m_CachedGPULoad = gpuLoad;
-            m_CachedGPUTemp = gpuTemp;
+            m_CachedGPULoad = gpuLoadStr;
+            m_CachedGPUTemp = gpuTempStr;
         }
 
         // Sleep for 1 second before polling again
@@ -47,49 +49,6 @@ std::string TelemetryMonitor::GetGPULoad() const {
 std::string TelemetryMonitor::GetGPUTemp() const {
     std::lock_guard<std::mutex> lock(m_DataMutex);
     return m_CachedGPUTemp;
-}
-
-std::string TelemetryMonitor::ReadGPULoad() const {
-    for (int i = 0; i <= 2; ++i) {
-        std::string path = "/sys/class/drm/card" + std::to_string(i) + "/device/gpu_busy_percent";
-        std::ifstream file(path);
-        if (file.is_open()) {
-            std::string valStr;
-            std::getline(file, valStr);
-            valStr.erase(0, valStr.find_first_not_of(" \n\r\t"));
-            valStr.erase(valStr.find_last_not_of(" \n\r\t") + 1);
-            try {
-                int busy = std::stoi(valStr);
-                if (busy >= 0 && busy <= 100) return std::to_string(busy) + "%";
-            } catch (...) {}
-        }
-    }
-    return "N/A";
-}
-
-std::string TelemetryMonitor::ReadGPUTemp() const {
-    // Scan Linux hwmon directories for dedicated GPU drivers (amdgpu, nvidia, nouveau)
-    for (int i = 0; i < 10; ++i) {
-        std::string hwmonDir = "/sys/class/hwmon/hwmon" + std::to_string(i) + "/";
-        std::ifstream nameFile(hwmonDir + "name");
-        if (nameFile.is_open()) {
-            std::string driverName;
-            nameFile >> driverName;
-            if (driverName == "amdgpu" || driverName == "nvidia" || driverName == "nouveau") {
-                std::ifstream tempFile(hwmonDir + "temp1_input");
-                if (tempFile.is_open()) {
-                    long long tempMilliC;
-                    tempFile >> tempMilliC;
-                    double tempC = tempMilliC / 1000.0;
-                    if (tempC > 0 && tempC < 150) {
-                        return std::to_string((int)tempC) + " C";
-                    }
-                }
-            }
-        }
-    }
-    // Fallback reading if direct GPU sysfs thermal nodes are restricted in container/virtualized runs
-    return "N/A";
 }
 
 double TelemetryMonitor::GetUptimeSeconds() const {
