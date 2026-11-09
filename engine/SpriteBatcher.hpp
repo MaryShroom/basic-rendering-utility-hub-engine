@@ -155,14 +155,6 @@ public:
         m_IndexCount += 6;
     }
 
-    void EndBatch() {
-        // Upload any remaining data in the buffer before final flush
-        if (m_IndexCount > 0) {
-            uint32_t dataSize = (uint32_t)((uint8_t*)m_VertexBufferPtr - (uint8_t*)m_VertexBufferBase);
-            m_VertexBuffer->SetData(m_VertexBufferBase, dataSize);
-        }
-    }
-
     void Flush() {
         if (m_IndexCount == 0) return;
 

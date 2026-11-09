@@ -85,7 +85,7 @@ namespace BruhEngine {
             SDL_WINDOWPOS_CENTERED,
             SDL_WINDOWPOS_CENTERED,
             width, height,
-            SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
+            SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL
         );
 
         if (!window) {
@@ -226,7 +226,6 @@ namespace BruhEngine {
             batcher->DrawQuad( 0.1f, -0.4f, 0.3f, 0.5f, red);   // Red tinted sprite
             batcher->DrawQuad(-0.2f,  0.1f, 0.5f, 0.3f, blue);  // Blue tinted sprite
 
-            batcher->EndBatch();
             batcher->Flush();
         }
     }
@@ -375,10 +374,7 @@ namespace BruhEngine {
     }
 
     void EndBatch() {
-        if (batcher) {
-            batcher->EndBatch();
-            batcher->Flush();
-        }
+        if (batcher) batcher->Flush();
 
         // Render ImGui draw data over the engine scene
         ImGui::Render();
