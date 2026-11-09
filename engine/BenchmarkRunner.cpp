@@ -4,7 +4,8 @@
 #include <numeric>
 #include <algorithm>
 
-void BenchmarkRunner::Configure(bool enabled, const std::string& testName, double initialOverdraw) {
+void BenchmarkRunner::Configure(bool enabled, std::string testName, float expectedOverdraw,
+                                double warmupSeconds = 2.0, double runSeconds = 10.0) {
     m_Enabled = enabled;
     m_TestName = testName;
     m_FrameTimes.clear();
@@ -22,19 +23,40 @@ void BenchmarkRunner::Configure(bool enabled, const std::string& testName, doubl
     m_GPULoadSamples.reserve(60000);
     m_CPULoadSamples.reserve(60000);
     m_GPUTempSamples.reserve(60000);
+
+    m_WarmupDuration = warmupSeconds;
+    m_RunLength = runSeconds;
+    m_CurrentWarmupTime = 0.0;
+    m_CurrentRunTime = 0.0;
+    m_WarmupComplete = false;
+    m_BenchmarkComplete = false;
 }
 
 bool BenchmarkRunner::EvaluateFrame(double frameTime, bool& isRunning) {
     if (!m_Enabled) return true;
 
-    if (frameTime > 0.100) {
-        std::cerr << "\n[BenchmarkRunner] CRITICAL: Frame time exceeded 100ms ("
-        << std::fixed << std::setprecision(2) << (frameTime * 1000.0)
-        << " ms). Automatic cut-off triggered.\n";
-        isRunning = false;
+    if (!m_WarmupComplete) {
+        m_CurrentWarmupTime += frameTime;
+        if (m_CurrentWarmupTime >= m_WarmupDuration) {
+            m_WarmupComplete = true;
+            std::cout << "[Benchmark] Warm-up complete. Starting active collection window...\n";
+        }
+        return false; // Do not record during warm-up
+    }
+
+    if (m_BenchmarkComplete) {
         return false;
     }
-    return true;
+
+    m_CurrentRunTime += frameTime;
+    if (m_CurrentRunTime >= m_RunLength) {
+        m_BenchmarkComplete = true;
+        FinalizeAndPrint();
+        std::cout << "[Benchmark] Collection complete. Window remains active.\n";
+        return false; // Stop recording, but keep window running
+    }
+
+    return true; // Frame approved for recording
 }
 
 void BenchmarkRunner::RecordFrame(float ms, double overdrawFactor, int windowWidth, int windowHeight,

@@ -72,6 +72,21 @@ target_include_directories(BasicRenderingUtilityHub PRIVATE
 # Link SDL2, OpenGL
 target_link_libraries(BasicRenderingUtilityHub PRIVATE SDL2::SDL2 OpenGL::GL imgui)
 
+# Get the current Git short commit hash
+execute_process(
+    COMMAND git rev-parse --short HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_COMMIT_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+)
+
+if(NOT GIT_COMMIT_HASH)
+    set(GIT_COMMIT_HASH "unknown")
+endif()
+
+target_compile_definitions(BasicRenderingUtilityHub PRIVATE COMMIT_HASH="${GIT_COMMIT_HASH}")
+
 # DEBUG flags
 target_compile_options(BasicRenderingUtilityHub PRIVATE
     $<$<CONFIG:Debug>:
