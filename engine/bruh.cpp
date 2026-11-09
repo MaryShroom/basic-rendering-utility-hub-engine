@@ -495,16 +495,6 @@ namespace BruhEngine {
         std::cout << "BruhEngine Shut Down Cleanly.\n";
     }
 
-    // void SetVSync(bool enabled) {
-    //     s_VSyncEnabled = enabled;
-    //     // 1 for VSync on, 0 for VSync off (unlocked fps)
-    //     if (SDL_GL_SetSwapInterval(enabled ? 1 : 0) < 0) {
-    //         std::cerr << "Warning: Unable to modify V-Sync! SDL_Error: " << SDL_GetError() << "\n";
-    //     } else {
-    //         std::cout << "V-Sync " << (enabled ? "Enabled" : "Disabled") << "\n";
-    //     }
-    // }
-
     bool SetVSync(bool enabled) {
         // 1 = VSync on, 0 = VSync off, -1 = adaptive vsync (if supported)
         int interval = enabled ? 1 : 0;

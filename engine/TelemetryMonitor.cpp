@@ -1,6 +1,8 @@
 #include "TelemetryMonitor.hpp"
 
 void TelemetryMonitor::Init() {
+    m_StartTime = std::chrono::high_resolution_clock::now();
+
     m_Running = true;
     // Launch background thread for sysfs polling
     m_WorkerThread = std::thread(&TelemetryMonitor::PollLoop, this);
@@ -79,6 +81,12 @@ std::string TelemetryMonitor::ReadGPUTemp() const {
         }
     }
     return "N/A";
+}
+
+double TelemetryMonitor::GetUptimeSeconds() const {
+    auto now = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = now - m_StartTime;
+    return elapsed.count();
 }
 
 void TelemetryMonitor::CalculateGpix(float screenWidth, float screenHeight, float overdrawFactor) {

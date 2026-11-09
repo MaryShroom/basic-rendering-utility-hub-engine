@@ -5,6 +5,7 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <chrono>
 
 class TelemetryMonitor {
 public:
@@ -20,9 +21,13 @@ public:
     std::string GetCPULoad() const;
     float GetGpixPerSec() const { return m_GpixPerSec; }
 
+    double GetUptimeSeconds() const;
+
     void CalculateGpix(float screenWidth, float screenHeight, float overdrawFactor);
 
 private:
+    std::chrono::high_resolution_clock::time_point m_StartTime;
+
     void PollLoop(); // Background thread function
 
     float m_FrameTimeMs = 0.0f;

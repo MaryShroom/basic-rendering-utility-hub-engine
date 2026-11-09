@@ -41,6 +41,7 @@ int main() {
 
         benchmark.Configure(true, std::to_string(particleCount) + " Sprites (0.1x)", overdrawFactor);
         BruhEngine::SetBlendEnabled(true); // Toggle blend for fill-rate testing
+        SetVSync(false); // Toggle V-Sync
     } else {
         BruhEngine::SetBlendEnabled(true);
     }
@@ -120,6 +121,7 @@ int main() {
 
             ImGui::Text("Performance");
             ImGui::Text("FPS: %.1f (%.3f ms/frame)", fps, frameTimeMs);
+            ImGui::Text("Uptime: %.1f s", telemetry.GetUptimeSeconds());
             ImGui::Separator();
 
             // Hardware Telemetry
