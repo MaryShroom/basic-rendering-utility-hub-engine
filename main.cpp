@@ -29,7 +29,7 @@ int main() {
     }
 
     // Particles count
-    const int particleCount = 10000; // Switch to 4000 (10x) or 8000 (20x) as needed
+    const int particleCount = 10000; // Switch to 2000 (5x), 4000 (10x) or 8000 (20x) as needed
 
     int pixelWidth = winW, pixelHeight = winH;
     BruhEngine::GetDrawableSize(&pixelWidth, &pixelHeight);
@@ -38,7 +38,7 @@ int main() {
     float spriteWidth = 512.0f / (float)pixelWidth * 2.0f;
     float spriteHeight = 512.0f / (float)pixelHeight * 2.0f;
 
-    float overdrawFactor = ((float)particleCount * (spriteWidth * spriteHeight)) / 4.0f;
+    double overdrawFactor = ((double)particleCount * (double)(spriteWidth * spriteHeight)) / 4.0;
 
     // Benchmark and Telemetry Opt-In
     bool enableBenchmarkMode = true;
@@ -120,38 +120,6 @@ int main() {
         BruhEngine::GetDrawableSize(&pixelWidth, &pixelHeight);
         // ---------------------------------------------
 
-        // --- Compute Precise Overdraw Using Batcher's Exact Corner Logic ---
-        double totalVisibleArea = 0.0;
-        float pivotX = 0.5f;
-        float pivotY = 0.5f;
-
-        float xMin = -spriteWidth * pivotX;
-        float xMax = spriteWidth * (1.0f - pivotX);
-        float yMin = -spriteHeight * pivotY;
-        float yMax = spriteHeight * (1.0f - pivotY);
-
-        for (const auto& p : particles) {
-            float left   = p.x + xMin;
-            float right  = p.x + xMax;
-            float bottom = p.y + yMin;
-            float top    = p.y + yMax;
-
-            // Clamp edges to NDC viewport range [-1.0, 1.0]
-            float cLeft   = std::max(-1.0f, std::min(1.0f, left));
-            float cRight  = std::max(-1.0f, std::min(1.0f, right));
-            float cBottom = std::max(-1.0f, std::min(1.0f, bottom));
-            float cTop    = std::max(-1.0f, std::min(1.0f, top));
-
-            float cWidth  = cRight - cLeft;
-            float cHeight = cTop - cBottom;
-
-            if (cWidth > 0.0f && cHeight > 0.0f) {
-                totalVisibleArea += (double)(cWidth * cHeight);
-            }
-        }
-        double overdrawFactor = totalVisibleArea / 4.0;
-        // ------------------------------------------------------------------
-
         if (shouldRecord) {
             benchmark.RecordFrame(
                 (float)(frameTime * 1000.0),
@@ -172,15 +140,17 @@ int main() {
         }
 
         // --- Render Modular Telemetry HUD ---
-        telemetry.DrawHUD(
-            particleCount,
-            GetDrawCalls(),
-            overdrawFactor,
-            IsVSyncEnabled(),
-            [](bool vsync) { SetVSync(vsync); },
-            IsDepthEnabled(),
-            [](bool depth) { SetDepthEnabled(depth); }
-        );
+        if (telemetry.IsVisible()) {
+            telemetry.DrawHUD(
+                particleCount,
+                GetDrawCalls(),
+                overdrawFactor,
+                IsVSyncEnabled(),
+                [](bool vsync) { SetVSync(vsync); },
+                IsDepthEnabled(),
+                [](bool depth) { SetDepthEnabled(depth); }
+            );
+        };
 
         EndBatch();
 
