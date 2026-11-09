@@ -195,7 +195,6 @@ int main() {
     // Run engine loop with custom update and render callbacks
     Run(updateLogic, renderLogic);
 
-    benchmark.FinalizeAndPrint();
     telemetry.Shutdown();
     Shutdown();
     return 0;

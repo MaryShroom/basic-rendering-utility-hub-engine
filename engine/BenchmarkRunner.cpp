@@ -136,11 +136,17 @@ void BenchmarkRunner::FinalizeAndPrint() {
     std::string cpuLoadCol = m_CPULoadSamples.empty() ? "N/A" : std::to_string((int)avgCPULoad) + "%";
     std::string tempCol    = m_GPUTempSamples.empty() ? "N/A" : std::to_string((int)avgGPUTemp) + " C";
 
+    // Format duration values
+    std::string warmupCol  = std::to_string((int)m_WarmupDuration) + " s";
+    std::string runLenCol  = std::to_string((int)m_RunLength) + " s";
+
     std::cout << "\n========================================================================================\n";
     std::cout << "                                BRUHENGINE BENCHMARK RESULT                             \n";
     std::cout << "========================================================================================\n";
     std::cout << " Test Name:             " << m_TestName << "\n";
     std::cout << " Window Size:           " << windowCol << "\n";
+    std::cout << " Warm-up Duration:      " << warmupCol << "\n";
+    std::cout << " Active Run Duration:   " << runLenCol << "\n";
     std::cout << " Blend:                 " << blendCol << "\n";
     std::cout << " Depth Test:            " << depthCol << "\n";
     std::cout << " VSync:                 " << vsyncCol << "\n";
