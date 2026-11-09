@@ -231,7 +231,7 @@ namespace BruhEngine {
         }
     }
 
-    void Run(std::function<void(float fixedDeltaTime)> updateFunc, std::function<void()> renderFunc) {
+    void Run(std::function<void(float fixedDeltaTime)> updateFunc, std::function<void()> renderFunc, double warmupGraceSeconds = 2.0) {
         const double targetFPS = 60.0;
         const double fixedDt = 1.0 / targetFPS;
 
@@ -249,7 +249,7 @@ namespace BruhEngine {
 
             // --- AUTOMATIC CUT-OFF (>100 ms HITCH) ---
             double engineUptime = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - s_StartTime).count();
-            if (frameTime > 0.100 && engineUptime > 2.0) {
+            if (frameTime > 0.100 && engineUptime > warmupGraceSeconds) {
                 std::cerr << "\n[BruhEngine] CRITICAL: Frame time exceeded 100ms ("
                 << std::fixed << std::setprecision(2) << (frameTime * 1000.0)
                 << " ms). Automatic cut-off triggered.\n";

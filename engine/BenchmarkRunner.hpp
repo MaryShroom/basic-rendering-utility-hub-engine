@@ -18,6 +18,8 @@ public:
 
     bool IsEnabled() const { return m_Enabled; }
 
+    double GetWarmupDuration() const { return m_WarmupDuration; }
+
 private:
     void SampleHardware();
 

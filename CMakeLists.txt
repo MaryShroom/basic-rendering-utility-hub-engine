@@ -83,6 +83,17 @@ execute_process(
 
 if(NOT GIT_COMMIT_HASH)
     set(GIT_COMMIT_HASH "unknown")
+else()
+    execute_process(
+        COMMAND git status --porcelain
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_STATUS_OUTPUT
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    if(GIT_STATUS_OUTPUT)
+        set(GIT_COMMIT_HASH "${GIT_COMMIT_HASH}-dirty")
+    endif()
 endif()
 
 target_compile_definitions(BasicRenderingUtilityHub PRIVATE COMMIT_HASH="${GIT_COMMIT_HASH}")
