@@ -150,18 +150,17 @@ int main() {
         double overdrawFactor = totalVisibleArea / 4.0;
         // ------------------------------------------------------------------
 
-        benchmark.RecordFrame(
-            (float)(frameTime * 1000.0),
-            overdrawFactor,
-            pixelWidth,
-            pixelHeight,
-            IsBlendEnabled(),
-            IsDepthEnabled(),
-            IsVSyncEnabled(),
-            telemetry.GetGPULoad(),
-            GetCPULoadString(),
-            GetGPUTemperature()
-        );
+        if (shouldRecord) {
+            benchmark.RecordFrame(
+                (float)(frameTime * 1000.0),
+                overdrawFactor,
+                pixelWidth,
+                pixelHeight,
+                IsBlendEnabled(),
+                IsDepthEnabled(),
+                IsVSyncEnabled()
+            );
+        }
         telemetry.Update(frameTime);
         telemetry.CalculateGpix((float)pixelWidth, (float)pixelHeight, overdrawFactor);
 

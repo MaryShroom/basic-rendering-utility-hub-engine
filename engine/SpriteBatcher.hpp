@@ -106,9 +106,15 @@ public:
         float yMin = -height * pivotY;
         float yMax = height * (1.0f - pivotY);
 
+        // Map local offsets to world/NDC positions around (x, y)
+        float x0 = x + xMin; // Bottom-Left / Top-Left X
+        float x1 = x + xMax; // Bottom-Right / Top-Right X
+        float y0 = y + yMin; // Bottom-Left / Bottom-Right Y
+        float y1 = y + yMax; // Top-Left / Top-Right Y
+
         // Bottom-Left
-        m_VertexBufferPtr->Position[0] = x;
-        m_VertexBufferPtr->Position[1] = y;
+        m_VertexBufferPtr->Position[0] = x0;
+        m_VertexBufferPtr->Position[1] = y0;
         m_VertexBufferPtr->Color[0] = color[0]; m_VertexBufferPtr->Color[1] = color[1]; m_VertexBufferPtr->Color[2] = color[2];
         m_VertexBufferPtr->TexCoords[0] = 0.0f; m_VertexBufferPtr->TexCoords[1] = 0.0f;
         m_VertexBufferPtr->Pivot[0] = pivotX;
@@ -117,8 +123,8 @@ public:
         m_VertexBufferPtr++;
 
         // Bottom-Right
-        m_VertexBufferPtr->Position[0] = x + width;
-        m_VertexBufferPtr->Position[1] = y;
+        m_VertexBufferPtr->Position[0] = x1;
+        m_VertexBufferPtr->Position[1] = y0;
         m_VertexBufferPtr->Color[0] = color[0]; m_VertexBufferPtr->Color[1] = color[1]; m_VertexBufferPtr->Color[2] = color[2];
         m_VertexBufferPtr->TexCoords[0] = 1.0f; m_VertexBufferPtr->TexCoords[1] = 0.0f;
         m_VertexBufferPtr->Pivot[0] = pivotX;
@@ -127,8 +133,8 @@ public:
         m_VertexBufferPtr++;
 
         // Top-Right
-        m_VertexBufferPtr->Position[0] = x + width;
-        m_VertexBufferPtr->Position[1] = y + height;
+        m_VertexBufferPtr->Position[0] = x1;
+        m_VertexBufferPtr->Position[1] = y1;
         m_VertexBufferPtr->Color[0] = color[0]; m_VertexBufferPtr->Color[1] = color[1]; m_VertexBufferPtr->Color[2] = color[2];
         m_VertexBufferPtr->TexCoords[0] = 1.0f; m_VertexBufferPtr->TexCoords[1] = 1.0f;
         m_VertexBufferPtr->Pivot[0] = pivotX;
@@ -137,8 +143,8 @@ public:
         m_VertexBufferPtr++;
 
         // Top-Left
-        m_VertexBufferPtr->Position[0] = x;
-        m_VertexBufferPtr->Position[1] = y + height;
+        m_VertexBufferPtr->Position[0] = x0;
+        m_VertexBufferPtr->Position[1] = y1;
         m_VertexBufferPtr->Color[0] = color[0]; m_VertexBufferPtr->Color[1] = color[1]; m_VertexBufferPtr->Color[2] = color[2];
         m_VertexBufferPtr->TexCoords[0] = 0.0f; m_VertexBufferPtr->TexCoords[1] = 1.0f;
         m_VertexBufferPtr->Pivot[0] = pivotX;

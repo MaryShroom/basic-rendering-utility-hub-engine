@@ -63,96 +63,6 @@ namespace BruhEngine {
         "   FragColor = texture(u_Texture, TexCoord) * vec4(fragColor, 1.0);\n"
         "}\n";
 
-    // --- Hardware Diagnostic Helpers ---
-    static unsigned long long s_StartCpuActive = 0;
-    static unsigned long long s_StartCpuTotal = 0;
-
-    static double s_AccumulatedGPULoad = 0.0;
-    static uint64_t s_GPULoadSampleCount = 0;
-
-    static void ReadCpuStats(unsigned long long& active, unsigned long long& total) {
-        std::ifstream statFile("/proc/stat");
-        if (!statFile.is_open()) {
-            active = 0;
-            total = 0;
-            return;
-        }
-        std::string cpu;
-        unsigned long long user, nice, system, idle, iowait, irq, softirq, steal;
-        statFile >> cpu >> user >> nice >> system >> idle >> iowait >> irq >> softirq >> steal;
-
-        active = user + nice + system + irq + softirq + steal;
-        total = active + idle + iowait;
-    }
-
-    std::string GetCPULoadString() {
-        unsigned long long endActive, endTotal;
-        ReadCpuStats(endActive, endTotal);
-
-        unsigned long long deltaActive = endActive - s_StartCpuActive;
-        unsigned long long deltaTotal = endTotal - s_StartCpuTotal;
-
-        if (deltaTotal == 0) return "~33%"; // Fallback matching baseline
-
-        double cpuLoad = (double)deltaActive / (double)deltaTotal * 100.0;
-        std::ostringstream oss;
-        oss << std::fixed << std::setprecision(0) << cpuLoad << "%";
-        return oss.str();
-    }
-
-    std::string GetGPUTemperature() {
-        // Scan Linux hwmon directories for dedicated GPU drivers (amdgpu, nvidia, nouveau)
-        for (int i = 0; i < 10; ++i) {
-            std::string hwmonDir = "/sys/class/hwmon/hwmon" + std::to_string(i) + "/";
-            std::ifstream nameFile(hwmonDir + "name");
-            if (nameFile.is_open()) {
-                std::string driverName;
-                nameFile >> driverName;
-                if (driverName == "amdgpu" || driverName == "nvidia" || driverName == "nouveau") {
-                    std::ifstream tempFile(hwmonDir + "temp1_input");
-                    if (tempFile.is_open()) {
-                        long long tempMilliC;
-                        tempFile >> tempMilliC;
-                        double tempC = tempMilliC / 1000.0;
-                        if (tempC > 0 && tempC < 150) {
-                            return std::to_string((int)tempC) + " C";
-                        }
-                    }
-                }
-            }
-        }
-        // Fallback reading if direct GPU sysfs thermal nodes are restricted in container/virtualized runs
-        return "72 C";
-    }
-
-    std::string GetGPULoadString() {
-        // Safely check card indices 0 through 2 for AMD gpu telemetry
-        for (int i = 0; i <= 2; ++i) {
-            std::string path = "/sys/class/drm/card" + std::to_string(i) + "/device/gpu_busy_percent";
-            std::ifstream file(path);
-            if (file.is_open()) {
-                std::string valStr;
-                std::getline(file, valStr);
-
-                // Strip whitespace/newlines
-                valStr.erase(0, valStr.find_first_not_of(" \n\r\t"));
-                valStr.erase(valStr.find_last_not_of(" \n\r\t") + 1);
-
-                try {
-                    int busy = std::stoi(valStr);
-                    if (busy >= 0 && busy <= 100) {
-                        return std::to_string(busy) + "%";
-                    }
-                } catch (...) {
-                    // Ignore parse errors and continue
-                }
-            }
-        }
-
-        // Fallback if the file doesn't exist on this hardware/GPU vendor
-        return "N/A";
-    }
-
     bool Init(const char* title, int width, int height) {
         // Initialize SDL
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -263,13 +173,6 @@ namespace BruhEngine {
         s_TotalFrames = 0;
         s_FrameTimes.clear();
 
-        // Initial CPU stats
-        ReadCpuStats(s_StartCpuActive, s_StartCpuTotal);
-
-        // Reset GPU Load
-        s_AccumulatedGPULoad = 0.0;
-        s_GPULoadSampleCount = 0;
-
         // --- Setup Dear ImGui context ---
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -367,16 +270,6 @@ namespace BruhEngine {
 
             s_TotalFrames++;
             s_FrameTimes.push_back((float)(frameTime * 1000.0));
-
-            // Get GPU load
-            std::string currentLoadStr = GetGPULoadString();
-            if (currentLoadStr != "N/A" && currentLoadStr != "72 C") { // parse percentage
-                try {
-                    double loadVal = std::stod(currentLoadStr);
-                    s_AccumulatedGPULoad += loadVal;
-                    s_GPULoadSampleCount++;
-                } catch (...) {}
-            }
 
             // Reset draw call counter at the start of the frame draw phase
             s_DrawCalls = 0;

@@ -54,5 +54,7 @@ private:
     std::string ReadGPULoad() const;
     std::string ReadGPUTemp() const;
 
+    float m_GpixTimer = 0.0f;
+
     bool m_ShowHUD = true;
 };

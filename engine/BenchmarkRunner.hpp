@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <fstream>
 
 class BenchmarkRunner {
 public:
@@ -11,14 +12,15 @@ public:
     bool EvaluateFrame(double frameTime, bool& isRunning);
 
     void RecordFrame(float ms, double overdrawFactor, int windowWidth, int windowHeight,
-                     bool blendActive, bool depthActive, bool vsyncActive,
-                     const std::string& gpuLoadStr, const std::string& cpuLoadStr, const std::string& tempStr);
+                     bool blendActive, bool depthActive, bool vsyncActive);
 
     void FinalizeAndPrint();
 
     bool IsEnabled() const { return m_Enabled; }
 
 private:
+    void SampleHardware();
+
     bool m_Enabled = false;
     std::string m_TestName = "Default";
     std::vector<float> m_FrameTimes;
@@ -41,6 +43,13 @@ private:
     double m_RunLength = 10.0;
     double m_CurrentWarmupTime = 0.0;
     double m_CurrentRunTime = 0.0;
+    double m_HardwareSampleTimer = 0.0;
+
     bool m_WarmupComplete = false;
     bool m_BenchmarkComplete = false;
+
+    // CPU delta state tracking
+    unsigned long long m_LastCpuActive = 0;
+    unsigned long long m_LastCpuTotal = 0;
+    bool m_InitializedCpuStats = false;
 };

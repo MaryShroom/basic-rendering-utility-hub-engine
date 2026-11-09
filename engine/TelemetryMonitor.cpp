@@ -37,7 +37,6 @@ void TelemetryMonitor::PollLoop() {
 void TelemetryMonitor::Update(double frameTime) {
     m_FrameTimeMs = (float)(frameTime * 1000.0);
     m_FPS = (frameTime > 0.0) ? (1.0f / (float)frameTime) : 0.0f;
-    // No blocking file I/O on the main thread anymore!
 }
 
 std::string TelemetryMonitor::GetGPULoad() const {
@@ -105,9 +104,16 @@ double TelemetryMonitor::GetGpixPerSec() const {
 }
 
 void TelemetryMonitor::CalculateGpix(float screenWidth, float screenHeight, double overdrawFactor) {
-    double windowPixels = (double)screenWidth * (double)screenHeight;
-    std::lock_guard<std::mutex> lock(m_DataMutex);
-    m_GpixPerSec = (windowPixels * overdrawFactor * (double)m_FPS) / 1'000'000'000.0;
+    m_GpixTimer += (m_FrameTimeMs / 1000.0f);
+
+    if (m_GpixTimer >= 1.0f) {
+        double windowPixels = (double)screenWidth * (double)screenHeight;
+        {
+            std::lock_guard<std::mutex> lock(m_DataMutex);
+            m_GpixPerSec = (windowPixels * overdrawFactor * (double)m_FPS) / 1'000'000'000.0;
+        }
+        m_GpixTimer = 0.0f;
+    }
 }
 
 void TelemetryMonitor::DrawHUD(int particleCount, int drawCalls, float overdrawFactor, bool vsyncEnabled, std::function<void(bool)> onVSyncToggle, bool depthEnabled, std::function<void(bool)> onDepthToggle) {

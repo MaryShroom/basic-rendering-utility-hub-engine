@@ -31,7 +31,4 @@ namespace BruhEngine {
     bool IsBlendEnabled();
     void SetDepthEnabled(bool enabled);
     bool IsDepthEnabled();
-
-    std::string GetCPULoadString();
-    std::string GetGPUTemperature();
 }
