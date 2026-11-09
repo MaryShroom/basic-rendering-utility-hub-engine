@@ -27,9 +27,12 @@ int main() {
     // Particles count
     const int particleCount = 10000; // Switch to 4000 (10x) or 8000 (20x) as needed
 
-    // Particles size
-    float spriteWidth = 0.1f;
-    float spriteHeight = 0.1f;
+    int pixelWidth = winW, pixelHeight = winH;
+    BruhEngine::GetDrawableSize(&pixelWidth, &pixelHeight);
+
+    // Particles size (converted from an 8-pixel target into proper NDC scale)
+    float spriteWidth = 512.0f / (float)winW * 2.0f;
+    float spriteHeight = 512.0f / (float)winH * 2.0f;
 
     float overdrawFactor = ((float)particleCount * (spriteWidth * spriteHeight)) / 4.0f;
 
