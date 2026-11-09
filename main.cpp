@@ -38,7 +38,48 @@ int main() {
     float spriteWidth = 512.0f / (float)pixelWidth * 2.0f;
     float spriteHeight = 512.0f / (float)pixelHeight * 2.0f;
 
-    double overdrawFactor = ((double)particleCount * (double)(spriteWidth * spriteHeight)) / 4.0;
+    // Initialize however many moving particles
+    std::vector<Particle> particles(particleCount);
+    for (int i = 0; i < particleCount; ++i) {
+        particles[i].x = ((float)(rand() % 2000) / 1000.0f) - 1.0f; // Random X (-1.0 to 1.0)
+        particles[i].y = ((float)(rand() % 2000) / 1000.0f) - 1.0f; // Random Y (-1.0 to 1.0)
+        particles[i].vx = ((float)(rand() % 100) - 50.0f) / 300.0f;  // Velocity X
+        particles[i].vy = ((float)(rand() % 100) - 50.0f) / 300.0f;  // Velocity Y
+
+        particles[i].color[0] = (float)(rand() % 100) / 100.0f;     // R tint
+        particles[i].color[1] = (float)(rand() % 100) / 100.0f;     // G tint
+        particles[i].color[2] = 1.0f;                               // B tint
+    }
+
+    // Compute Precise Clipped Overdraw Factor Once at Startup
+    float pivotX = 0.5f;
+    float pivotY = 0.5f;
+    float xMin = -spriteWidth * pivotX;
+    float xMax = spriteWidth * (1.0f - pivotX);
+    float yMin = -spriteHeight * pivotY;
+    float yMax = spriteHeight * (1.0f - pivotY);
+
+    double totalVisibleArea = 0.0;
+    for (const auto& p : particles) {
+        float left   = p.x + xMin;
+        float right  = p.x + xMax;
+        float bottom = p.y + yMin;
+        float top    = p.y + yMax;
+
+        // Clamp edges to NDC viewport range [-1.0, 1.0]
+        float cLeft   = std::max(-1.0f, std::min(1.0f, left));
+        float cRight  = std::max(-1.0f, std::min(1.0f, right));
+        float cBottom = std::max(-1.0f, std::min(1.0f, bottom));
+        float cTop    = std::max(-1.0f, std::min(1.0f, top));
+
+        float cWidth  = cRight - cLeft;
+        float cHeight = cTop - cBottom;
+
+        if (cWidth > 0.0f && cHeight > 0.0f) {
+            totalVisibleArea += (double)(cWidth * cHeight);
+        }
+    }
+    double overdrawFactor = totalVisibleArea / 4.0;
 
     // Benchmark and Telemetry Opt-In
     bool enableBenchmarkMode = true;
@@ -74,19 +115,6 @@ int main() {
             }
         }
     });
-
-    // Initialize however many moving particles
-    std::vector<Particle> particles(particleCount);
-    for (int i = 0; i < particleCount; ++i) {
-        particles[i].x = ((float)(rand() % 2000) / 1000.0f) - 1.0f; // Random X (-1.0 to 1.0)
-        particles[i].y = ((float)(rand() % 2000) / 1000.0f) - 1.0f; // Random Y (-1.0 to 1.0)
-        particles[i].vx = ((float)(rand() % 100) - 50.0f) / 300.0f;  // Velocity X
-        particles[i].vy = ((float)(rand() % 100) - 50.0f) / 300.0f;  // Velocity Y
-
-        particles[i].color[0] = (float)(rand() % 100) / 100.0f;     // R tint
-        particles[i].color[1] = (float)(rand() % 100) / 100.0f;     // G tint
-        particles[i].color[2] = 1.0f;                               // B tint
-    }
 
     bool isRunning = true;
 
