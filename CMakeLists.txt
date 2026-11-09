@@ -73,31 +73,31 @@ target_include_directories(BasicRenderingUtilityHub PRIVATE
 # Link SDL2, OpenGL
 target_link_libraries(BasicRenderingUtilityHub PRIVATE SDL2::SDL2 OpenGL::GL imgui)
 
-# Get the current Git short commit hash
-execute_process(
-    COMMAND git rev-parse --short HEAD
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    OUTPUT_VARIABLE GIT_COMMIT_HASH
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    ERROR_QUIET
+# Define where the generated header will live
+set(GIT_VERSION_FILE "${CMAKE_BINARY_DIR}/GeneratedGitVersion.hpp")
+
+# Add a custom command that runs on every build to update the header if git state changes
+add_custom_command(
+    OUTPUT "${GIT_VERSION_FILE}"
+    COMMAND ${CMAKE_COMMAND}
+        -DOUTPUT_FILE="${GIT_VERSION_FILE}"
+        -P "${CMAKE_SOURCE_DIR}/cmake/GetGitHash.cmake"
+    COMMENT "Checking Git revision and source status..."
+    VERBATIM
 )
 
-if(NOT GIT_COMMIT_HASH)
-    set(GIT_COMMIT_HASH "unknown")
-else()
-    execute_process(
-        COMMAND git status --porcelain
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE GIT_STATUS_OUTPUT
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_QUIET
-    )
-    if(GIT_STATUS_OUTPUT)
-        set(GIT_COMMIT_HASH "${GIT_COMMIT_HASH}-dirty")
-    endif()
-endif()
+# Create a custom target so the build system depends on this header
+add_custom_target(GitVersionTarget DEPENDS "${GIT_VERSION_FILE}")
 
-target_compile_definitions(BasicRenderingUtilityHub PRIVATE COMMIT_HASH="${GIT_COMMIT_HASH}")
+# Make your main executable depend on the git version target
+add_dependencies(BasicRenderingUtilityHub GitVersionTarget)
+
+# Ensure the compiler and main.cpp can find the generated header
+target_include_directories(BasicRenderingUtilityHub PRIVATE
+    thirdparty/glad/include
+    .
+    "${CMAKE_BINARY_DIR}"
+)
 
 # DEBUG flags
 target_compile_options(BasicRenderingUtilityHub PRIVATE

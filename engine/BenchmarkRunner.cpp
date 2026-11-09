@@ -59,8 +59,7 @@ bool BenchmarkRunner::EvaluateFrame(double frameTime, bool& /*isRunning*/) {
     m_CurrentRunTime += frameTime;
     if (m_CurrentRunTime >= m_RunLength) {
         m_BenchmarkComplete = true;
-        FinalizeAndPrint();
-        std::cout << "[Benchmark] Collection complete. Window remains active.\n";
+        std::cout << "[Benchmark] Collection complete. Window remains active. Report will output after the program closed.\n";
         return false;
     }
 
