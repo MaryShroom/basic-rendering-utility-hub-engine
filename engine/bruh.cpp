@@ -65,10 +65,19 @@ namespace BruhEngine {
 
     static std::string s_BenchmarkTestName = "Default Test";
     static float s_BenchmarkOverdrawFactor = 1.0f;
+    static std::string s_BenchmarkPC = "A";
+    static std::string s_BenchmarkCommit = "n/a";
+    static std::string s_BenchmarkNotes = "Automated multi-batch GPU run";
 
     void SetBenchmarkInfo(const std::string& testName, float overdrawFactor) {
         s_BenchmarkTestName = testName;
         s_BenchmarkOverdrawFactor = overdrawFactor;
+    }
+
+    void SetBenchmarkMetadata(const std::string& pc, const std::string& commit, const std::string& notes) {
+        s_BenchmarkPC = pc;
+        s_BenchmarkCommit = commit;
+        s_BenchmarkNotes = notes;
     }
 
     // --- Hardware Diagnostic Helpers ---
@@ -432,8 +441,8 @@ namespace BruhEngine {
         bool isDepthActive = glIsEnabled(GL_DEPTH_TEST);
 
         // --- Benchmark Metrics Parameters ---
-        std::string pcCol       = "A";
-        std::string commitCol   = "n/a";
+        std::string pcCol       = s_BenchmarkPC;
+        std::string commitCol   = s_BenchmarkCommit;
         std::string testCol     = s_BenchmarkTestName;
         std::string overdrawCol = "~" + std::to_string((int)s_BenchmarkOverdrawFactor) + "x";
         std::string blendCol    = isBlendActive ? "on" : "off";
@@ -442,7 +451,7 @@ namespace BruhEngine {
         std::string gpuLoadCol  = GetGPULoadString();
         std::string cpuLoadCol  = GetCPULoadString();
         std::string tempCol     = GetGPUTemperature();
-        std::string notesCol    = "Automated multi-batch GPU run";
+        std::string notesCol    = s_BenchmarkNotes;
 
         // --- Output Benchmark Row to Terminal ---
         std::cout << "\n========================================================================================\n";

@@ -46,6 +46,9 @@ int main() {
         BruhEngine::SetBlendEnabled(true);
     }
 
+    // PC, Commit, Notes
+    BruhEngine::SetBenchmarkMetadata("B", "7416926", "2k particles. Blend On. 1 minute run.");
+
     // Register event listener to toggle VSync on pressing 'V'
     SetEventCallback([](const SDL_Event& e) {
         if (e.type == SDL_KEYDOWN) {

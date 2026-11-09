@@ -68,18 +68,27 @@ std::string TelemetryMonitor::ReadGPULoad() const {
 }
 
 std::string TelemetryMonitor::ReadGPUTemp() const {
-    for (int i = 0; i <= 5; ++i) {
-        std::string path = "/sys/class/hwmon/hwmon" + std::to_string(i) + "/temp1_input";
-        std::ifstream file(path);
-        if (file.is_open()) {
-            std::string valStr;
-            std::getline(file, valStr);
-            try {
-                float temp = std::stoi(valStr) / 1000.0f;
-                return std::to_string((int)temp) + "°C";
-            } catch (...) {}
+    // Scan Linux hwmon directories for dedicated GPU drivers (amdgpu, nvidia, nouveau)
+    for (int i = 0; i < 10; ++i) {
+        std::string hwmonDir = "/sys/class/hwmon/hwmon" + std::to_string(i) + "/";
+        std::ifstream nameFile(hwmonDir + "name");
+        if (nameFile.is_open()) {
+            std::string driverName;
+            nameFile >> driverName;
+            if (driverName == "amdgpu" || driverName == "nvidia" || driverName == "nouveau") {
+                std::ifstream tempFile(hwmonDir + "temp1_input");
+                if (tempFile.is_open()) {
+                    long long tempMilliC;
+                    tempFile >> tempMilliC;
+                    double tempC = tempMilliC / 1000.0;
+                    if (tempC > 0 && tempC < 150) {
+                        return std::to_string((int)tempC) + " C";
+                    }
+                }
+            }
         }
     }
+    // Fallback reading if direct GPU sysfs thermal nodes are restricted in container/virtualized runs
     return "N/A";
 }
 

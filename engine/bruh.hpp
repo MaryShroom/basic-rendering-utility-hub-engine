@@ -28,6 +28,7 @@ namespace BruhEngine {
 
     // Benchmark
     void SetBenchmarkInfo(const std::string& testName, float overdrawFactor);
+    void SetBenchmarkMetadata(const std::string& pc, const std::string& commit, const std::string& notes);
 
     void SetBlendEnabled(bool enabled);
 }
