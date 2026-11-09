@@ -63,23 +63,6 @@ namespace BruhEngine {
         "   FragColor = texture(u_Texture, TexCoord) * vec4(fragColor, 1.0);\n"
         "}\n";
 
-    static std::string s_BenchmarkTestName = "Default Test";
-    static float s_BenchmarkOverdrawFactor = 1.0f;
-    static std::string s_BenchmarkPC = "A";
-    static std::string s_BenchmarkCommit = "n/a";
-    static std::string s_BenchmarkNotes = "Automated multi-batch GPU run";
-
-    void SetBenchmarkInfo(const std::string& testName, float overdrawFactor) {
-        s_BenchmarkTestName = testName;
-        s_BenchmarkOverdrawFactor = overdrawFactor;
-    }
-
-    void SetBenchmarkMetadata(const std::string& pc, const std::string& commit, const std::string& notes) {
-        s_BenchmarkPC = pc;
-        s_BenchmarkCommit = commit;
-        s_BenchmarkNotes = notes;
-    }
-
     // --- Hardware Diagnostic Helpers ---
     static unsigned long long s_StartCpuActive = 0;
     static unsigned long long s_StartCpuTotal = 0;

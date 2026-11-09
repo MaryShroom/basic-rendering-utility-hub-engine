@@ -28,8 +28,8 @@ int main() {
     const int particleCount = 10000; // Switch to 4000 (10x) or 8000 (20x) as needed
 
     // Particles size
-    float spriteWidth = 8.0f;
-    float spriteHeight = 8.0f;
+    float spriteWidth = 0.1f;
+    float spriteHeight = 0.1f;
 
     float overdrawFactor = ((float)particleCount * (spriteWidth * spriteHeight)) / 4.0f;
 
@@ -41,10 +41,7 @@ int main() {
 
     BenchmarkRunner benchmark;
     if (enableBenchmarkMode) {
-        benchmark.Configure(true, std::to_string(particleCount) + " Sprites (8.0x)", overdrawFactor);
-
-        // For my eyes
-        BruhEngine::SetBenchmarkInfo(std::to_string(particleCount) + " Sprites (8.0x)", overdrawFactor);
+        benchmark.Configure(true, std::to_string(particleCount) + " Sprites (" + std::to_string(spriteWidth) + "x" + std::to_string(spriteHeight) + ")", overdrawFactor);
 
         BruhEngine::SetBlendEnabled(true); // Toggle blend for fill-rate testing
         SetDepthEnabled(false); // Depth Toggle
@@ -52,9 +49,6 @@ int main() {
     } else {
         BruhEngine::SetBlendEnabled(true);
     }
-
-    // PC, Commit, Notes
-    BruhEngine::SetBenchmarkMetadata("B", "e615b36", "10k particles. Particle size of 8.0 by 8.0 in NDC space (fixed count, varying size). Blend On. 1 minute run. Release build.");
 
     // Register event listener to toggle VSync on pressing 'V'
     SetEventCallback([&telemetry](const SDL_Event& e) {
@@ -116,20 +110,29 @@ int main() {
         BruhEngine::GetDrawableSize(&pixelWidth, &pixelHeight);
         // ---------------------------------------------
 
-        // --- Compute Precise Viewport-Clamped Overdraw (Double Precision) ---
+        // --- Compute Precise Overdraw Using Batcher's Exact Corner Logic ---
         double totalVisibleArea = 0.0;
+        float pivotX = 0.5f;
+        float pivotY = 0.5f;
+
+        float xMin = -spriteWidth * pivotX;
+        float xMax = spriteWidth * (1.0f - pivotX);
+        float yMin = -spriteHeight * pivotY;
+        float yMax = spriteHeight * (1.0f - pivotY);
+
         for (const auto& p : particles) {
-            float left = p.x - (spriteWidth * 0.5f);
-            float right = p.x + (spriteWidth * 0.5f);
-            float bottom = p.y - (spriteHeight * 0.5f);
-            float top = p.y + (spriteHeight * 0.5f);
+            float left   = p.x + xMin;
+            float right  = p.x + xMax;
+            float bottom = p.y + yMin;
+            float top    = p.y + yMax;
 
-            float cLeft = std::max(-1.0f, std::min(1.0f, left));
-            float cRight = std::max(-1.0f, std::min(1.0f, right));
+            // Clamp edges to NDC viewport range [-1.0, 1.0]
+            float cLeft   = std::max(-1.0f, std::min(1.0f, left));
+            float cRight  = std::max(-1.0f, std::min(1.0f, right));
             float cBottom = std::max(-1.0f, std::min(1.0f, bottom));
-            float cTop = std::max(-1.0f, std::min(1.0f, top));
+            float cTop    = std::max(-1.0f, std::min(1.0f, top));
 
-            float cWidth = cRight - cLeft;
+            float cWidth  = cRight - cLeft;
             float cHeight = cTop - cBottom;
 
             if (cWidth > 0.0f && cHeight > 0.0f) {

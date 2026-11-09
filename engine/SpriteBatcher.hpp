@@ -8,10 +8,11 @@
 #include <cstdint>
 
 struct SpriteVertex {
-    float Position[2];
-    float Color[3];
-    float TexCoords[2];
-    float TexID;
+    float Position[2];   // Anchor position (x, y)
+    float Color[3];      // RGB tint
+    float TexCoords[2];  // UV coordinates
+    float TexID;         // Texture slot ID
+    float Pivot[2];      // Pivot offset (e.g., 0.5, 0.5 for center)
 };
 
 class SpriteBatcher {
@@ -57,6 +58,14 @@ public:
         glEnableVertexAttribArray(3);
         glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(SpriteVertex), (const void*)offsetof(SpriteVertex, TexID));
 
+        // Attribute 3: Pivot (2 floats)
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(SpriteVertex), (const void*)offsetof(SpriteVertex, Pivot));
+
+        // Attribute 4: Texture ID (1 float) - shifted from attribute 3
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(SpriteVertex), (const void*)offsetof(SpriteVertex, TexID));
+
         // Generate static index buffer once upfront for all quads
         uint32_t* indices = new uint32_t[MaxIndices];
         uint32_t offset = 0;
@@ -88,14 +97,22 @@ public:
         m_ActiveTexture = &texture;
     }
 
-    void DrawQuad(float x, float y, float width, float height, const float color[3], float texID = 0.0f) {
+    void DrawQuad(float x, float y, float width, float height, const float color[3], float pivotX = 0.5f, float pivotY = 0.5f, float texID = 0.0f) {
         if (m_IndexCount >= MaxIndices) Flush(); // Prevent overflow
+
+        // Compute local offset based on pivot dimensions
+        float xMin = -width * pivotX;
+        float xMax = width * (1.0f - pivotX);
+        float yMin = -height * pivotY;
+        float yMax = height * (1.0f - pivotY);
 
         // Bottom-Left
         m_VertexBufferPtr->Position[0] = x;
         m_VertexBufferPtr->Position[1] = y;
         m_VertexBufferPtr->Color[0] = color[0]; m_VertexBufferPtr->Color[1] = color[1]; m_VertexBufferPtr->Color[2] = color[2];
         m_VertexBufferPtr->TexCoords[0] = 0.0f; m_VertexBufferPtr->TexCoords[1] = 0.0f;
+        m_VertexBufferPtr->Pivot[0] = pivotX;
+        m_VertexBufferPtr->Pivot[1] = pivotY;
         m_VertexBufferPtr->TexID = texID;
         m_VertexBufferPtr++;
 
@@ -104,6 +121,8 @@ public:
         m_VertexBufferPtr->Position[1] = y;
         m_VertexBufferPtr->Color[0] = color[0]; m_VertexBufferPtr->Color[1] = color[1]; m_VertexBufferPtr->Color[2] = color[2];
         m_VertexBufferPtr->TexCoords[0] = 1.0f; m_VertexBufferPtr->TexCoords[1] = 0.0f;
+        m_VertexBufferPtr->Pivot[0] = pivotX;
+        m_VertexBufferPtr->Pivot[1] = pivotY;
         m_VertexBufferPtr->TexID = texID;
         m_VertexBufferPtr++;
 
@@ -112,6 +131,8 @@ public:
         m_VertexBufferPtr->Position[1] = y + height;
         m_VertexBufferPtr->Color[0] = color[0]; m_VertexBufferPtr->Color[1] = color[1]; m_VertexBufferPtr->Color[2] = color[2];
         m_VertexBufferPtr->TexCoords[0] = 1.0f; m_VertexBufferPtr->TexCoords[1] = 1.0f;
+        m_VertexBufferPtr->Pivot[0] = pivotX;
+        m_VertexBufferPtr->Pivot[1] = pivotY;
         m_VertexBufferPtr->TexID = texID;
         m_VertexBufferPtr++;
 
@@ -120,6 +141,8 @@ public:
         m_VertexBufferPtr->Position[1] = y + height;
         m_VertexBufferPtr->Color[0] = color[0]; m_VertexBufferPtr->Color[1] = color[1]; m_VertexBufferPtr->Color[2] = color[2];
         m_VertexBufferPtr->TexCoords[0] = 0.0f; m_VertexBufferPtr->TexCoords[1] = 1.0f;
+        m_VertexBufferPtr->Pivot[0] = pivotX;
+        m_VertexBufferPtr->Pivot[1] = pivotY;
         m_VertexBufferPtr->TexID = texID;
         m_VertexBufferPtr++;
 

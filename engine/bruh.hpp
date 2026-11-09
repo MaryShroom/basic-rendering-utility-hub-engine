@@ -27,10 +27,6 @@ namespace BruhEngine {
     void DrawQuad(float x, float y, float width, float height, const float color[3]);
     void EndBatch();
 
-    // Benchmark
-    void SetBenchmarkInfo(const std::string& testName, float overdrawFactor);
-    void SetBenchmarkMetadata(const std::string& pc, const std::string& commit, const std::string& notes);
-
     void SetBlendEnabled(bool enabled);
     bool IsBlendEnabled();
     void SetDepthEnabled(bool enabled);
