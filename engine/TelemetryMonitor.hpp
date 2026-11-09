@@ -6,6 +6,7 @@
 #include <mutex>
 #include <atomic>
 #include <chrono>
+#include <functional>
 
 class TelemetryMonitor {
 public:
@@ -24,6 +25,13 @@ public:
     double GetUptimeSeconds() const;
 
     void CalculateGpix(float screenWidth, float screenHeight, float overdrawFactor);
+
+    // --- ImGui HUD Management ---
+    void SetVisible(bool visible) { m_ShowHUD = visible; }
+    void ToggleVisible() { m_ShowHUD = !m_ShowHUD; }
+    bool IsVisible() const { return m_ShowHUD; }
+
+    void DrawHUD(int particleCount, int drawCalls, float overdrawFactor, bool vsyncEnabled, std::function<void(bool)> onVSyncToggle);
 
 private:
     std::chrono::high_resolution_clock::time_point m_StartTime;
@@ -45,4 +53,6 @@ private:
     // Internal file-reading helpers
     std::string ReadGPULoad() const;
     std::string ReadGPUTemp() const;
+
+    bool m_ShowHUD = true;
 };

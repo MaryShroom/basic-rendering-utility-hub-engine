@@ -1,4 +1,5 @@
 #include "TelemetryMonitor.hpp"
+#include "imgui.h"
 
 void TelemetryMonitor::Init() {
     m_StartTime = std::chrono::high_resolution_clock::now();
@@ -101,4 +102,41 @@ double TelemetryMonitor::GetUptimeSeconds() const {
 void TelemetryMonitor::CalculateGpix(float screenWidth, float screenHeight, float overdrawFactor) {
     float windowPixels = screenWidth * screenHeight;
     m_GpixPerSec = (windowPixels * overdrawFactor * m_FPS) / 1'000'000'000.0f;
+}
+
+void TelemetryMonitor::DrawHUD(int particleCount, int drawCalls, float overdrawFactor, bool vsyncEnabled, std::function<void(bool)> onVSyncToggle) {
+    if (!m_ShowHUD) return;
+
+    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
+    ImGui::SetNextWindowBgAlpha(0.75f);
+
+    if (ImGui::Begin("Engine Metrics", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav)) {
+        ImGui::Text("Performance");
+        ImGui::Text("FPS: %.1f (%.3f ms/frame)", m_FPS, m_FrameTimeMs);
+        ImGui::Text("Uptime: %.1f s", GetUptimeSeconds());
+        ImGui::Separator();
+
+        // Hardware Telemetry
+        ImGui::Text("GPU Load: %s", GetGPULoad().c_str());
+        ImGui::Text("GPU Temp: %s", GetGPUTemp().c_str());
+        ImGui::Separator();
+
+        ImGui::Text("Active Sprites: %d", particleCount);
+        ImGui::Text("Draw Calls: %d", drawCalls);
+        ImGui::Text("Est. Overdraw: ~%.0fx", overdrawFactor);
+
+        // Throughput metrics
+        ImGui::Text("Throughput: %.3f Gpix/s", m_GpixPerSec);
+
+        ImGui::Separator();
+
+        bool vsync = vsyncEnabled;
+        if (ImGui::Checkbox("VSync Enabled", &vsync)) {
+            if (onVSyncToggle) {
+                onVSyncToggle(vsync);
+            }
+        }
+
+        ImGui::End();
+    }
 }

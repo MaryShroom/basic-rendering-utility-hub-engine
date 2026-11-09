@@ -56,10 +56,12 @@ int main() {
     BruhEngine::SetBenchmarkMetadata("B", "e615b36", "10k particles. Particle size of 8.0 by 8.0 in NDC space (fixed count, varying size). Blend On. 1 minute run. Release build.");
 
     // Register event listener to toggle VSync on pressing 'V'
-    SetEventCallback([](const SDL_Event& e) {
+    SetEventCallback([&telemetry](const SDL_Event& e) {
         if (e.type == SDL_KEYDOWN) {
             if (e.key.keysym.sym == SDLK_v) {
                 SetVSync(!IsVSyncEnabled());
+            } else if (e.key.keysym.sym == SDLK_h) {
+                telemetry.ToggleVisible();
             }
         }
     });
@@ -112,40 +114,10 @@ int main() {
             DrawQuad(p.x, p.y, spriteWidth, spriteHeight, p.color);
         }
 
-        // --- ImGui Performance HUD Overlay ---
-        ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
-        ImGui::SetNextWindowBgAlpha(0.75f);
-
-        if (ImGui::Begin("Engine Metrics", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav)) {
-            float fps = telemetry.GetFPS();
-            float frameTimeMs = telemetry.GetFrameTimeMs();
-
-            ImGui::Text("Performance");
-            ImGui::Text("FPS: %.1f (%.3f ms/frame)", fps, frameTimeMs);
-            ImGui::Text("Uptime: %.1f s", telemetry.GetUptimeSeconds());
-            ImGui::Separator();
-
-            // Hardware Telemetry
-            ImGui::Text("GPU Load: %s", telemetry.GetGPULoad().c_str());
-            ImGui::Text("GPU Temp: %s", telemetry.GetGPUTemp().c_str());
-            ImGui::Separator();
-
-            ImGui::Text("Active Sprites: %d", particleCount);
-            ImGui::Text("Draw Calls: %d", GetDrawCalls());
-            ImGui::Text("Est. Overdraw: ~%.0fx", overdrawFactor);
-
-            // Display in Gigapixels per second for readability (e.g., Gpix/s)
-            ImGui::Text("Throughput: %.3f Gpix/s", telemetry.GetGpixPerSec());
-
-            ImGui::Separator();
-
-            bool vsync = IsVSyncEnabled();
-            if (ImGui::Checkbox("VSync Enabled", &vsync)) {
-                SetVSync(vsync);
-            }
-
-            ImGui::End();
-        }
+        // --- Render Modular Telemetry HUD ---
+        telemetry.DrawHUD(particleCount, GetDrawCalls(), overdrawFactor, IsVSyncEnabled(), [](bool vsync) {
+            SetVSync(vsync);
+        });
 
         EndBatch();
 
