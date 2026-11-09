@@ -102,7 +102,7 @@ namespace BruhEngine {
         total = active + idle + iowait;
     }
 
-    static std::string GetCPULoadString() {
+    std::string GetCPULoadString() {
         unsigned long long endActive, endTotal;
         ReadCpuStats(endActive, endTotal);
 
@@ -117,7 +117,7 @@ namespace BruhEngine {
         return oss.str();
     }
 
-    static std::string GetGPUTemperature() {
+    std::string GetGPUTemperature() {
         // Scan Linux hwmon directories for dedicated GPU drivers (amdgpu, nvidia, nouveau)
         for (int i = 0; i < 10; ++i) {
             std::string hwmonDir = "/sys/class/hwmon/hwmon" + std::to_string(i) + "/";
@@ -415,6 +415,10 @@ namespace BruhEngine {
         if (window) SDL_GetWindowSize(window, w, h);
     }
 
+    void GetDrawableSize(int* w, int* h) {
+        if (window) SDL_GL_GetDrawableSize(window, w, h);
+    }
+
     void Shutdown() {
         // Cleanup ImGui
         ImGui_ImplOpenGL3_Shutdown();
@@ -511,6 +515,10 @@ namespace BruhEngine {
         } else {
             glDisable(GL_BLEND);
         }
+    }
+
+    bool IsBlendEnabled() {
+        return glIsEnabled(GL_BLEND);
     }
 
     void SetDepthEnabled(bool enabled) {

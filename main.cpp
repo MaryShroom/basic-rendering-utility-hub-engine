@@ -96,20 +96,25 @@ int main() {
         }
     };
 
+    // Keep track of time for precise per-frame delta in main.cpp
+    Uint64 lastCounter = SDL_GetPerformanceCounter();
+
     // Custom render logic: what to draw each frame
     auto renderLogic = [&]() {
-        float realFps = ImGui::GetIO().Framerate;
-        float realFrameTime = (realFps > 0.0f) ? (1.0f / realFps) : 0.0f;
+        Uint64 currentCounter = SDL_GetPerformanceCounter();
+        double frameTime = (double)(currentCounter - lastCounter) / (double)SDL_GetPerformanceFrequency();
+        lastCounter = currentCounter;
 
-        if (!benchmark.EvaluateFrame(realFrameTime, isRunning)) {
+        if (frameTime > 0.25) frameTime = 0.25; // Clamp lag spikes
+
+        if (!benchmark.EvaluateFrame(frameTime, isRunning)) {
             return;
         }
 
-        benchmark.RecordFrameTime((float)(realFrameTime * 1000.0f));
-
-        telemetry.Update(realFrameTime);
-
-        BruhEngine::GetWindowSize(&winW, &winH);
+        // --- Get Exact Physical Framebuffer Pixels ---
+        int pixelWidth = winW, pixelHeight = winH;
+        BruhEngine::GetDrawableSize(&pixelWidth, &pixelHeight);
+        // ---------------------------------------------
 
         // --- Compute Precise Viewport-Clamped Overdraw (Double Precision) ---
         double totalVisibleArea = 0.0;
@@ -119,7 +124,6 @@ int main() {
             float bottom = p.y - (spriteHeight * 0.5f);
             float top = p.y + (spriteHeight * 0.5f);
 
-            // Clamp edges to NDC viewport range [-1.0, 1.0]
             float cLeft = std::max(-1.0f, std::min(1.0f, left));
             float cRight = std::max(-1.0f, std::min(1.0f, right));
             float cBottom = std::max(-1.0f, std::min(1.0f, bottom));
@@ -135,7 +139,20 @@ int main() {
         double overdrawFactor = totalVisibleArea / 4.0;
         // ------------------------------------------------------------------
 
-        telemetry.CalculateGpix((float)winW, (float)winH, overdrawFactor);
+        benchmark.RecordFrame(
+            (float)(frameTime * 1000.0),
+            overdrawFactor,
+            pixelWidth,
+            pixelHeight,
+            IsBlendEnabled(),
+            IsDepthEnabled(),
+            IsVSyncEnabled(),
+            telemetry.GetGPULoad(),
+            GetCPULoadString(),
+            GetGPUTemperature()
+        );
+        telemetry.Update(frameTime);
+        telemetry.CalculateGpix((float)pixelWidth, (float)pixelHeight, overdrawFactor);
 
         BeginBatch();
         for (const auto& p : particles) {

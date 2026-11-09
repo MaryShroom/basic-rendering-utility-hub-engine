@@ -8,6 +8,7 @@ namespace BruhEngine {
     void Run(std::function<void(float fixedDeltaTime)> updateFunc, std::function<void()> renderFunc);
     void SetWindowTitle(const std::string& title);
     void GetWindowSize(int* w, int* h);
+    void GetDrawableSize(int* w, int* h);
     void Shutdown();
 
     // VSync controls
@@ -31,6 +32,10 @@ namespace BruhEngine {
     void SetBenchmarkMetadata(const std::string& pc, const std::string& commit, const std::string& notes);
 
     void SetBlendEnabled(bool enabled);
+    bool IsBlendEnabled();
     void SetDepthEnabled(bool enabled);
     bool IsDepthEnabled();
+
+    std::string GetCPULoadString();
+    std::string GetGPUTemperature();
 }
