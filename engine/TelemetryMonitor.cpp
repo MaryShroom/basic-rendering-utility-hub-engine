@@ -63,15 +63,19 @@ double TelemetryMonitor::GetGpixPerSec() const {
 }
 
 void TelemetryMonitor::CalculateGpix(float screenWidth, float screenHeight, double overdrawFactor) {
-    m_GpixTimer += (m_FrameTimeMs / 1000.0f);
+    float frameSeconds = m_FrameTimeMs / 1000.0f;
+    m_AccumulatedTime += frameSeconds;
+    m_FrameCount++;
 
-    if (m_GpixTimer >= 1.0f) {
+    if (m_AccumulatedTime >= 0.5f) {
+        float avgFps = (m_AccumulatedTime > 0.0f) ? ((float)m_FrameCount / m_AccumulatedTime) : 0.0f;
         double windowPixels = (double)screenWidth * (double)screenHeight;
         {
             std::lock_guard<std::mutex> lock(m_DataMutex);
-            m_GpixPerSec = (windowPixels * overdrawFactor * (double)m_FPS) / 1'000'000'000.0;
+            m_GpixPerSec = (windowPixels * overdrawFactor * (double)avgFps) / 1'000'000'000.0;
         }
-        m_GpixTimer = 0.0f;
+        m_AccumulatedTime = 0.0f;
+        m_FrameCount = 0;
     }
 }
 

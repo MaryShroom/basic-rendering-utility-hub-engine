@@ -55,7 +55,8 @@ private:
     // Internal file-reading helpers
     HardwareSampler m_Sampler;
 
-    float m_GpixTimer = 0.0f;
+    float m_AccumulatedTime = 0.0f;
+    int m_FrameCount = 0;
 
     bool m_ShowHUD = true;
 };

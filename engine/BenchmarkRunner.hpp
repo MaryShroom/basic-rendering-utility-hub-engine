@@ -7,11 +7,11 @@
 
 class BenchmarkRunner {
 public:
-    void Configure(bool enabled, std::string testName, float expectedOverdraw,
+    void Configure(bool enabled, std::string testName, float /*expectedOverdraw*/,
                    double warmupSeconds, double runSeconds);
 
     // Returns false if the 100ms cut-off was triggered (signals loop termination)
-    bool EvaluateFrame(double frameTime, bool& isRunning);
+    bool EvaluateFrame(double frameTime, bool& /*isRunning*/);
 
     void RecordFrame(float ms, double overdrawFactor, int windowWidth, int windowHeight,
                      bool blendActive, bool depthActive, bool vsyncActive);

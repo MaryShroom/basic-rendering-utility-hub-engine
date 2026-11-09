@@ -4,7 +4,7 @@
 #include <numeric>
 #include <algorithm>
 
-void BenchmarkRunner::Configure(bool enabled, std::string testName, float expectedOverdraw,
+void BenchmarkRunner::Configure(bool enabled, std::string testName, float /*expectedOverdraw*/,
                                 double warmupSeconds = 2.0, double runSeconds = 10.0) {
     m_Enabled = enabled;
     m_TestName = testName;
@@ -32,7 +32,7 @@ void BenchmarkRunner::Configure(bool enabled, std::string testName, float expect
     m_BenchmarkComplete = false;
 }
 
-bool BenchmarkRunner::EvaluateFrame(double frameTime, bool& isRunning) {
+bool BenchmarkRunner::EvaluateFrame(double frameTime, bool& /*isRunning*/) {
     if (!m_Enabled) return true;
 
     if (!m_WarmupComplete) {
