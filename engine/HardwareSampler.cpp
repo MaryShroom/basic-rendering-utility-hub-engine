@@ -49,8 +49,8 @@ HardwareMetrics HardwareSampler::Sample() {
         }
     }
 
-    // Read GPU Temp from /sys/class/hwmon/hwmon*/temp1_input
-    for (int i = 0; i < 10; ++i) {
+    // Read GPU Temp from /sys/class/hwmon/hwmon* (expanded range up to 64)
+    for (int i = 0; i < 64; ++i) {
         std::string hwmonDir = "/sys/class/hwmon/hwmon" + std::to_string(i) + "/";
         std::ifstream nameFile(hwmonDir + "name");
         if (nameFile.is_open()) {
@@ -60,12 +60,13 @@ HardwareMetrics HardwareSampler::Sample() {
             if (driverName == "amdgpu" || driverName == "radeon" || driverName == "nvidia" || driverName == "nouveau") {
                 std::ifstream tempFile(hwmonDir + "temp1_input");
                 if (tempFile.is_open()) {
-                    long long tempMilliC;
-                    tempFile >> tempMilliC;
-                    double tempC = tempMilliC / 1000.0;
-                    if (tempC > 0 && tempC < 150) {
-                        metrics.gpuTemp = tempC;
-                        break;
+                    long long tempMilliC = 0; // Properly initialized to prevent uninitialized reads
+                    if (tempFile >> tempMilliC) {
+                        double tempC = tempMilliC / 1000.0;
+                        if (tempC > 0 && tempC < 150) {
+                            metrics.gpuTemp = tempC;
+                            break;
+                        }
                     }
                 }
             }

@@ -2,6 +2,10 @@
 #include "engine/TelemetryMonitor.hpp"
 #include "engine/BenchmarkRunner.hpp"
 
+#if __has_include("GeneratedGitVersion.hpp")
+#include "GeneratedGitVersion.hpp"
+#endif
+
 #include "imgui.h"
 
 #include <iostream>
@@ -50,7 +54,7 @@ int main() {
         particles[i].color[1] = (float)(rand() % 100) / 100.0f;     // G tint
         particles[i].color[2] = 1.0f;                               // B tint
     }
-
+    // random
     // Compute Precise Clipped Overdraw Factor Once at Startup
     float pivotX = 0.5f;
     float pivotY = 0.5f;

@@ -54,29 +54,9 @@ target_include_directories(imgui PUBLIC
 
 target_link_libraries(imgui PUBLIC SDL2::SDL2)
 
-# Main and thirdparty headers
-add_executable(BasicRenderingUtilityHub
-    main.cpp
-    engine/bruh.cpp
-    engine/TelemetryMonitor.cpp
-    engine/BenchmarkRunner.cpp
-    engine/HardwareSampler.cpp
-    thirdparty/glad/src/gl.c
-)
-
-# Include thirdparty paths
-target_include_directories(BasicRenderingUtilityHub PRIVATE
-    thirdparty/glad/include
-    .
-)
-
-# Link SDL2, OpenGL
-target_link_libraries(BasicRenderingUtilityHub PRIVATE SDL2::SDL2 OpenGL::GL imgui)
-
-# Define where the generated header will live
+# --- Git Version Generation Setup ---
 set(GIT_VERSION_FILE "${CMAKE_BINARY_DIR}/GeneratedGitVersion.hpp")
 
-# Add a custom command that runs on every build to update the header if git state changes
 add_custom_command(
     OUTPUT "${GIT_VERSION_FILE}"
     COMMAND ${CMAKE_COMMAND}
@@ -86,18 +66,27 @@ add_custom_command(
     VERBATIM
 )
 
-# Create a custom target so the build system depends on this header
-add_custom_target(GitVersionTarget DEPENDS "${GIT_VERSION_FILE}")
+add_custom_target(GenerateGitVersion DEPENDS "${GIT_VERSION_FILE}")
 
-# Make your main executable depend on the git version target
-add_dependencies(BasicRenderingUtilityHub GitVersionTarget)
+add_executable(BasicRenderingUtilityHub
+    main.cpp
+    engine/bruh.cpp
+    engine/TelemetryMonitor.cpp
+    engine/BenchmarkRunner.cpp
+    engine/HardwareSampler.cpp
+    thirdparty/glad/src/gl.c
+)
 
-# Ensure the compiler and main.cpp can find the generated header
+add_dependencies(BasicRenderingUtilityHub GenerateGitVersion)
+
 target_include_directories(BasicRenderingUtilityHub PRIVATE
     thirdparty/glad/include
     .
     "${CMAKE_BINARY_DIR}"
 )
+
+# Link SDL2, OpenGL, ImGui
+target_link_libraries(BasicRenderingUtilityHub PRIVATE SDL2::SDL2 OpenGL::GL imgui)
 
 # DEBUG flags
 target_compile_options(BasicRenderingUtilityHub PRIVATE
