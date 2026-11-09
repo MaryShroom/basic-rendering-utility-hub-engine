@@ -84,6 +84,9 @@ namespace BruhEngine {
     static unsigned long long s_StartCpuActive = 0;
     static unsigned long long s_StartCpuTotal = 0;
 
+    static double s_AccumulatedGPULoad = 0.0;
+    static uint64_t s_GPULoadSampleCount = 0;
+
     static void ReadCpuStats(unsigned long long& active, unsigned long long& total) {
         std::ifstream statFile("/proc/stat");
         if (!statFile.is_open()) {
@@ -280,6 +283,10 @@ namespace BruhEngine {
         // Initial CPU stats
         ReadCpuStats(s_StartCpuActive, s_StartCpuTotal);
 
+        // Reset GPU Load
+        s_AccumulatedGPULoad = 0.0;
+        s_GPULoadSampleCount = 0;
+
         // --- Setup Dear ImGui context ---
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -378,6 +385,16 @@ namespace BruhEngine {
             s_TotalFrames++;
             s_FrameTimes.push_back((float)(frameTime * 1000.0));
 
+            // Get GPU load
+            std::string currentLoadStr = GetGPULoadString();
+            if (currentLoadStr != "N/A" && currentLoadStr != "72 C") { // parse percentage
+                try {
+                    double loadVal = std::stod(currentLoadStr);
+                    s_AccumulatedGPULoad += loadVal;
+                    s_GPULoadSampleCount++;
+                } catch (...) {}
+            }
+
             // Reset draw call counter at the start of the frame draw phase
             s_DrawCalls = 0;
 
@@ -448,10 +465,15 @@ namespace BruhEngine {
         std::string blendCol    = isBlendActive ? "on" : "off";
         std::string depthCol    = isDepthActive ? "on" : "off";
         std::string vsyncCol    = s_VSyncEnabled ? "on" : "off";
-        std::string gpuLoadCol  = GetGPULoadString();
+        std::string gpuLoadCol  = "N/A";
         std::string cpuLoadCol  = GetCPULoadString();
         std::string tempCol     = GetGPUTemperature();
         std::string notesCol    = s_BenchmarkNotes;
+
+        if (s_GPULoadSampleCount > 0) {
+            double avgLoad = s_AccumulatedGPULoad / (double)s_GPULoadSampleCount;
+            gpuLoadCol = std::to_string((int)avgLoad) + "%";
+        }
 
         // --- Output Benchmark Row to Terminal ---
         std::cout << "\n========================================================================================\n";

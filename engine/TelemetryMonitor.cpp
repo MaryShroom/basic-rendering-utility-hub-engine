@@ -100,5 +100,5 @@ double TelemetryMonitor::GetUptimeSeconds() const {
 
 void TelemetryMonitor::CalculateGpix(float screenWidth, float screenHeight, float overdrawFactor) {
     float windowPixels = screenWidth * screenHeight;
-    m_GpixPerSec = (windowPixels * overdrawFactor * m_FPS) / 1'000'000.0f;
+    m_GpixPerSec = (windowPixels * overdrawFactor * m_FPS) / 1'000'000'000.0f;
 }

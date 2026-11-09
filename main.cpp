@@ -25,7 +25,13 @@ int main() {
     }
 
     // Particles count
-    const int particleCount = 2000; // Switch to 4000 (10x) or 8000 (20x) as needed
+    const int particleCount = 10000; // Switch to 4000 (10x) or 8000 (20x) as needed
+
+    // Particles size
+    float spriteWidth = 8.0f;
+    float spriteHeight = 8.0f;
+
+    float overdrawFactor = ((float)particleCount * (spriteWidth * spriteHeight)) / 4.0f;
 
     // Benchmark and Telemetry Opt-In
     bool enableBenchmarkMode = true;
@@ -35,11 +41,11 @@ int main() {
 
     BenchmarkRunner benchmark;
     if (enableBenchmarkMode) {
-        float spriteWidth = 0.1f;
-        float spriteHeight = 0.1f;
-        float overdrawFactor = ((float)particleCount * (spriteWidth * spriteHeight)) / 4.0f;
+        benchmark.Configure(true, std::to_string(particleCount) + " Sprites (8.0x)", overdrawFactor);
 
-        benchmark.Configure(true, std::to_string(particleCount) + " Sprites (0.1x)", overdrawFactor);
+        // For my eyes
+        BruhEngine::SetBenchmarkInfo(std::to_string(particleCount) + " Sprites (8.0x)", overdrawFactor);
+
         BruhEngine::SetBlendEnabled(true); // Toggle blend for fill-rate testing
         SetVSync(false); // Toggle V-Sync
     } else {
@@ -47,7 +53,7 @@ int main() {
     }
 
     // PC, Commit, Notes
-    BruhEngine::SetBenchmarkMetadata("B", "7416926", "2k particles. Blend On. 1 minute run.");
+    BruhEngine::SetBenchmarkMetadata("B", "e615b36", "10k particles. Particle size of 8.0 by 8.0 in NDC space (fixed count, varying size). Blend On. 1 minute run. Release build.");
 
     // Register event listener to toggle VSync on pressing 'V'
     SetEventCallback([](const SDL_Event& e) {
@@ -71,22 +77,10 @@ int main() {
         particles[i].color[2] = 1.0f;                               // B tint
     }
 
-    float spriteWidth = 0.1f;
-    float spriteHeight = 0.1f;
-
-    float overdrawFactor = ((float)particleCount * (spriteWidth * spriteHeight)) / 4.0f;
-    BruhEngine::SetBenchmarkInfo(std::to_string(particleCount) + " Sprites (0.1x)", overdrawFactor);
-
     bool isRunning = true;
 
     // Fixed update: move particles and bounce off screen edges
     auto updateLogic = [&](float fixedDt) {
-        if (!benchmark.EvaluateFrame(fixedDt, isRunning)) {
-            return;
-        }
-
-        benchmark.RecordFrameTime((float)(fixedDt * 1000.0));
-
         for (auto& p : particles) {
             p.x += p.vx * fixedDt;
             p.y += p.vy * fixedDt;
@@ -102,16 +96,20 @@ int main() {
         float realFps = ImGui::GetIO().Framerate;
         float realFrameTime = (realFps > 0.0f) ? (1.0f / realFps) : 0.0f;
 
+        if (!benchmark.EvaluateFrame(realFrameTime, isRunning)) {
+            return;
+        }
+
+        benchmark.RecordFrameTime((float)(realFrameTime * 1000.0f));
+
         telemetry.Update(realFrameTime);
 
         BruhEngine::GetWindowSize(&winW, &winH);
         telemetry.CalculateGpix((float)winW, (float)winH, overdrawFactor);
 
-        BruhEngine::GetWindowSize(&winW, &winH);
-
         BeginBatch();
         for (const auto& p : particles) {
-            DrawQuad(p.x, p.y, 0.1f, 0.1f, p.color);
+            DrawQuad(p.x, p.y, spriteWidth, spriteHeight, p.color);
         }
 
         // --- ImGui Performance HUD Overlay ---
