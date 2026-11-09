@@ -99,12 +99,18 @@ double TelemetryMonitor::GetUptimeSeconds() const {
     return elapsed.count();
 }
 
-void TelemetryMonitor::CalculateGpix(float screenWidth, float screenHeight, float overdrawFactor) {
-    float windowPixels = screenWidth * screenHeight;
-    m_GpixPerSec = (windowPixels * overdrawFactor * m_FPS) / 1'000'000'000.0f;
+double TelemetryMonitor::GetGpixPerSec() const {
+    std::lock_guard<std::mutex> lock(m_DataMutex);
+    return m_GpixPerSec;
 }
 
-void TelemetryMonitor::DrawHUD(int particleCount, int drawCalls, float overdrawFactor, bool vsyncEnabled, std::function<void(bool)> onVSyncToggle) {
+void TelemetryMonitor::CalculateGpix(float screenWidth, float screenHeight, double overdrawFactor) {
+    double windowPixels = (double)screenWidth * (double)screenHeight;
+    std::lock_guard<std::mutex> lock(m_DataMutex);
+    m_GpixPerSec = (windowPixels * overdrawFactor * (double)m_FPS) / 1'000'000'000.0;
+}
+
+void TelemetryMonitor::DrawHUD(int particleCount, int drawCalls, float overdrawFactor, bool vsyncEnabled, std::function<void(bool)> onVSyncToggle, bool depthEnabled, std::function<void(bool)> onDepthToggle) {
     if (!m_ShowHUD) return;
 
     ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
@@ -134,6 +140,13 @@ void TelemetryMonitor::DrawHUD(int particleCount, int drawCalls, float overdrawF
         if (ImGui::Checkbox("VSync Enabled", &vsync)) {
             if (onVSyncToggle) {
                 onVSyncToggle(vsync);
+            }
+        }
+
+        bool depth = depthEnabled;
+        if (ImGui::Checkbox("Depth Test Enabled", &depth)) {
+            if (onDepthToggle) {
+                onDepthToggle(depth);
             }
         }
 

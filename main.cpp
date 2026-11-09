@@ -47,6 +47,7 @@ int main() {
         BruhEngine::SetBenchmarkInfo(std::to_string(particleCount) + " Sprites (8.0x)", overdrawFactor);
 
         BruhEngine::SetBlendEnabled(true); // Toggle blend for fill-rate testing
+        SetDepthEnabled(false); // Depth Toggle
         SetVSync(false); // Toggle V-Sync
     } else {
         BruhEngine::SetBlendEnabled(true);
@@ -62,6 +63,8 @@ int main() {
                 SetVSync(!IsVSyncEnabled());
             } else if (e.key.keysym.sym == SDLK_h) {
                 telemetry.ToggleVisible();
+            } else if (e.key.keysym.sym == SDLK_d) {
+                SetDepthEnabled(!IsDepthEnabled());
             }
         }
     });
@@ -107,6 +110,31 @@ int main() {
         telemetry.Update(realFrameTime);
 
         BruhEngine::GetWindowSize(&winW, &winH);
+
+        // --- Compute Precise Viewport-Clamped Overdraw (Double Precision) ---
+        double totalVisibleArea = 0.0;
+        for (const auto& p : particles) {
+            float left = p.x - (spriteWidth * 0.5f);
+            float right = p.x + (spriteWidth * 0.5f);
+            float bottom = p.y - (spriteHeight * 0.5f);
+            float top = p.y + (spriteHeight * 0.5f);
+
+            // Clamp edges to NDC viewport range [-1.0, 1.0]
+            float cLeft = std::max(-1.0f, std::min(1.0f, left));
+            float cRight = std::max(-1.0f, std::min(1.0f, right));
+            float cBottom = std::max(-1.0f, std::min(1.0f, bottom));
+            float cTop = std::max(-1.0f, std::min(1.0f, top));
+
+            float cWidth = cRight - cLeft;
+            float cHeight = cTop - cBottom;
+
+            if (cWidth > 0.0f && cHeight > 0.0f) {
+                totalVisibleArea += (double)(cWidth * cHeight);
+            }
+        }
+        double overdrawFactor = totalVisibleArea / 4.0;
+        // ------------------------------------------------------------------
+
         telemetry.CalculateGpix((float)winW, (float)winH, overdrawFactor);
 
         BeginBatch();
@@ -115,9 +143,15 @@ int main() {
         }
 
         // --- Render Modular Telemetry HUD ---
-        telemetry.DrawHUD(particleCount, GetDrawCalls(), overdrawFactor, IsVSyncEnabled(), [](bool vsync) {
-            SetVSync(vsync);
-        });
+        telemetry.DrawHUD(
+            particleCount,
+            GetDrawCalls(),
+            overdrawFactor,
+            IsVSyncEnabled(),
+            [](bool vsync) { SetVSync(vsync); },
+            IsDepthEnabled(),
+            [](bool depth) { SetDepthEnabled(depth); }
+        );
 
         EndBatch();
 

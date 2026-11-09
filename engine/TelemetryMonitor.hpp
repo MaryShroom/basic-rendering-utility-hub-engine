@@ -20,18 +20,18 @@ public:
     std::string GetGPULoad() const;
     std::string GetGPUTemp() const;
     std::string GetCPULoad() const;
-    float GetGpixPerSec() const { return m_GpixPerSec; }
+    double GetGpixPerSec() const;
 
     double GetUptimeSeconds() const;
 
-    void CalculateGpix(float screenWidth, float screenHeight, float overdrawFactor);
+    void CalculateGpix(float screenWidth, float screenHeight, double overdrawFactor);
 
     // --- ImGui HUD Management ---
     void SetVisible(bool visible) { m_ShowHUD = visible; }
     void ToggleVisible() { m_ShowHUD = !m_ShowHUD; }
     bool IsVisible() const { return m_ShowHUD; }
 
-    void DrawHUD(int particleCount, int drawCalls, float overdrawFactor, bool vsyncEnabled, std::function<void(bool)> onVSyncToggle);
+    void DrawHUD(int particleCount, int drawCalls, float overdrawFactor, bool vsyncEnabled, std::function<void(bool)> onVSyncToggle, bool depthEnabled, std::function<void(bool)> onDepthToggle);
 
 private:
     std::chrono::high_resolution_clock::time_point m_StartTime;
@@ -40,7 +40,7 @@ private:
 
     float m_FrameTimeMs = 0.0f;
     float m_FPS = 0.0f;
-    float m_GpixPerSec = 0.0f;
+    double m_GpixPerSec = 0.0f;
 
     // Thread synchronization & caching
     std::thread m_WorkerThread;

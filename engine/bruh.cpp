@@ -416,90 +416,6 @@ namespace BruhEngine {
     }
 
     void Shutdown() {
-        // --- Calculate Performance Metrics ---
-        auto endTime = std::chrono::high_resolution_clock::now();
-        double totalDurationSec = std::chrono::duration<double>(endTime - s_StartTime).count();
-        double avgFPS = (totalDurationSec > 0.0) ? (s_TotalFrames / totalDurationSec) : 0.0;
-
-        float avgFrameTimeMs = 0.0f;
-        float worstFrameTimeMs = 0.0f;
-
-        if (!s_FrameTimes.empty()) {
-            double sum = 0.0;
-            for (float ft : s_FrameTimes) {
-                sum += ft;
-                if (ft > worstFrameTimeMs) worstFrameTimeMs = ft;
-            }
-            avgFrameTimeMs = (float)(sum / s_FrameTimes.size());
-        }
-
-        auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-        std::tm tmBuffer;
-#if defined(_WIN32)
-        localtime_s(&tmBuffer, &now);
-#else
-        localtime_r(&now, &tmBuffer);
-#endif
-        char dateBuf[32];
-        std::strftime(dateBuf, sizeof(dateBuf), "%Y-%m-%d", &tmBuffer);
-
-        // --- Window Size ---
-        int winW = 0, winH = 0;
-        GetWindowSize(&winW, &winH);
-        std::string windowCol = std::to_string(winW) + "x" + std::to_string(winH);
-
-        // --- Gpix/s Derived Calculation ---
-        // Formula: (Overdraw * Window Pixels * Avg FPS) / 1,000,000,000
-        double totalWindowPixels = (double)winW * (double)winH;
-        double gpixPerSec = (s_BenchmarkOverdrawFactor * totalWindowPixels * avgFPS) / 1'000'000'000.0;
-
-        // --- Query real OpenGL pipeline states ---
-        bool isBlendActive = glIsEnabled(GL_BLEND);
-        bool isDepthActive = glIsEnabled(GL_DEPTH_TEST);
-
-        // --- Benchmark Metrics Parameters ---
-        std::string pcCol       = s_BenchmarkPC;
-        std::string commitCol   = s_BenchmarkCommit;
-        std::string testCol     = s_BenchmarkTestName;
-        std::string overdrawCol = "~" + std::to_string((int)s_BenchmarkOverdrawFactor) + "x";
-        std::string blendCol    = isBlendActive ? "on" : "off";
-        std::string depthCol    = isDepthActive ? "on" : "off";
-        std::string vsyncCol    = s_VSyncEnabled ? "on" : "off";
-        std::string gpuLoadCol  = "N/A";
-        std::string cpuLoadCol  = GetCPULoadString();
-        std::string tempCol     = GetGPUTemperature();
-        std::string notesCol    = s_BenchmarkNotes;
-
-        if (s_GPULoadSampleCount > 0) {
-            double avgLoad = s_AccumulatedGPULoad / (double)s_GPULoadSampleCount;
-            gpuLoadCol = std::to_string((int)avgLoad) + "%";
-        }
-
-        // --- Output Benchmark Row to Terminal ---
-        std::cout << "\n========================================================================================\n";
-        std::cout << "                                BRUHENGINE BENCHMARK RESULT                             \n";
-        std::cout << "========================================================================================\n";
-        std::cout << "| Date | PC | Commit | Test | Window | Overdraw | Blend | Depth | Vsync | Avg ms | Worst ms | FPS | Gpix/s (derived) | GPU load | CPU load | Temp | Notes |\n";
-        std::cout << "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n";
-        std::cout << "| " << dateBuf
-                  << " | " << pcCol
-                  << " | " << commitCol
-                  << " | " << testCol
-                  << " | " << windowCol
-                  << " | " << overdrawCol
-                  << " | " << blendCol
-                  << " | " << depthCol
-                  << " | " << vsyncCol
-                  << " | " << std::fixed << std::setprecision(2) << avgFrameTimeMs
-                  << " | " << worstFrameTimeMs
-                  << " | " << std::setprecision(1) << avgFPS
-                  << " | " << std::setprecision(3) << gpixPerSec
-                  << " | " << gpuLoadCol
-                  << " | " << cpuLoadCol
-                  << " | " << tempCol
-                  << " | " << notesCol << " |\n";
-        std::cout << "========================================================================================\n\n";
-
         // Cleanup ImGui
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplSDL2_Shutdown();
@@ -595,5 +511,20 @@ namespace BruhEngine {
         } else {
             glDisable(GL_BLEND);
         }
+    }
+
+    void SetDepthEnabled(bool enabled) {
+        if (enabled) {
+            glEnable(GL_DEPTH_TEST);
+            glDepthMask(GL_TRUE);   // Enable writing to depth buffer
+            glDepthFunc(GL_LESS);
+        } else {
+            glDisable(GL_DEPTH_TEST);
+            glDepthMask(GL_FALSE);  // Disable writing to depth buffer
+        }
+    }
+
+    bool IsDepthEnabled() {
+        return glIsEnabled(GL_DEPTH_TEST);
     }
 }
