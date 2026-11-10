@@ -79,6 +79,18 @@ void TelemetryMonitor::CalculateGpix(float screenWidth, float screenHeight, doub
     }
 }
 
+void TelemetryMonitor::SetVisible(bool visible) {
+    m_ShowHUD = visible;
+}
+
+bool TelemetryMonitor::IsVisible() const {
+    return m_ShowHUD;
+}
+
+void TelemetryMonitor::ToggleVisible() {
+    m_ShowHUD = !m_ShowHUD;
+}
+
 void TelemetryMonitor::DrawHUD(int particleCount, int drawCalls, float overdrawFactor, bool vsyncEnabled, std::function<void(bool)> onVSyncToggle, bool depthEnabled, std::function<void(bool)> onDepthToggle) {
     if (!m_ShowHUD) return;
 

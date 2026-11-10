@@ -61,6 +61,7 @@ add_custom_target(UpdateGitVersion ALL
     COMMAND ${CMAKE_COMMAND}
         "-DOUTPUT_FILE=${GIT_VERSION_FILE}"
         -P "${CMAKE_SOURCE_DIR}/cmake/GetGitHash.cmake"
+    DEPENDS "${CMAKE_SOURCE_DIR}/cmake/GetGitHash.cmake"
     BYPRODUCTS "${GIT_VERSION_FILE}"
     COMMENT "Checking Git revision and source status..."
     VERBATIM

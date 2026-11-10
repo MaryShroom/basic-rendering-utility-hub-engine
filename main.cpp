@@ -11,6 +11,7 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>
+#include <algorithm>
 #include <SDL.h>
 
 #ifndef COMMIT_HASH
@@ -92,7 +93,7 @@ int main() {
 
     TelemetryMonitor telemetry;
     telemetry.Init();
-    telemetry.ToggleVisible();
+    telemetry.SetVisible(false);
 
     BenchmarkRunner benchmark;
     if (enableBenchmarkMode) {

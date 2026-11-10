@@ -29,9 +29,9 @@ public:
     void CalculateGpix(float screenWidth, float screenHeight, double overdrawFactor);
 
     // --- ImGui HUD Management ---
-    void SetVisible(bool visible) { m_ShowHUD = visible; }
-    void ToggleVisible() { m_ShowHUD = !m_ShowHUD; }
-    bool IsVisible() const { return m_ShowHUD; }
+    void SetVisible(bool visible);
+    void ToggleVisible();
+    bool IsVisible() const;
 
     void DrawHUD(int particleCount, int drawCalls, float overdrawFactor, bool vsyncEnabled, std::function<void(bool)> onVSyncToggle, bool depthEnabled, std::function<void(bool)> onDepthToggle);
 
