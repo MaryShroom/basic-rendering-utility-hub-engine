@@ -21,24 +21,75 @@
 
 using namespace BruhEngine;
 
+void PrintHelp() {
+    std::cout << "BruhEngine Benchmark Suite\n"
+              << "Usage: BruhEngineBenchmark [options]\n\n"
+              << "Options:\n"
+              << "  --window <w> <h>   Window width and height (default: 700 700)\n"
+              << "  --count <int>     Particle / sprite counts (default: 10000)\n"
+              << "  --pixels <int>     Sprite size width/height in pixels (default: 35)\n"
+              << "  --blend <0|1>      Enable alpha blending (default: 0)\n"
+              << "  --depth <0|1>      Enable depth testing (default: 0)\n"
+              << "  --vsync <0|1>      Enable VSync (default: 0)\n"
+              << "  --telemetry <0|1>  Initial telemetry HUD visibility (default: 0)\n"
+              << "  --duration <sec>   Active benchmark run duration in seconds (default: 60.0)\n"
+              << "  --warmup <sec>     Warmup grace period in seconds (default: 2.0)\n"
+              << "  --benchmark <0|1>  Enable automated benchmark runner (default: 1)\n"
+              << "  -h, --help         Display this help message\n";
+}
+
 struct Particle {
     float x, y;
     float vx, vy;
     float color[3];
 };
 
-int main() {
+int main(int argc, char* argv[]) {
+    // Default Configuration Value
     int winW = 700, winH = 700;
+    int particleCount = 10000;       // 2000 (5x), 4000 (10x) or 8000 (20x)
+    int spritePixelWH = 35;          // Pixel size 35px = 0.1 NDC size | For now, width and height sprite size is same, in px
+    bool enableBenchmarkMode = true; // Benchmark and Telemetry Opt-In
+    bool blendEnabled = false;
+    bool depthEnabled = false;
+    bool vsyncEnabled = false;
+    bool telemetryVisible = false;
+    double benchmarkDuration = 60.0;
+    double warmupTimer = 2.0f;
 
-    // Pixel size 35px = 0.1 NDC size
-    int spritePixelWH = 17; // For now, width and height sprite size is same, in px
+    // Parse Command-Line Arguments
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--window" && i + 2 < argc) {
+            winW = std::stoi(argv[++i]);
+            winH = std::stoi(argv[++i]);
+        } else if ((arg == "--count" || arg == "-c") && i + 1 < argc) {
+            particleCount = std::stoi(argv[++i]);
+        } else if ((arg == "--pixels" || arg == "-p") && i + 1 < argc) {
+            spritePixelWH = std::stoi(argv[++i]);
+        } else if ((arg == "--blend" || arg == "-b") && i + 1 < argc) {
+            blendEnabled = (std::stoi(argv[++i]) != 0);
+        } else if ((arg == "--depth" || arg == "-d") && i + 1 < argc) {
+            depthEnabled = (std::stoi(argv[++i]) != 0);
+        } else if ((arg == "--vsync" || arg == "-v") && i + 1 < argc) {
+            vsyncEnabled = (std::stoi(argv[++i]) != 0);
+        } else if (arg == "--telemetry" && i + 1 < argc) {
+            telemetryVisible = (std::stoi(argv[++i]) != 0);
+        } else if (arg == "--duration" && i + 1 < argc) {
+            benchmarkDuration = std::stod(argv[++i]);
+        } else if (arg == "--warmup" && i + 1 < argc) {
+            warmupTimer = std::stod(argv[++i]);
+        } else if (arg == "--benchmark" && i + 1 < argc) {
+            enableBenchmarkMode = (std::stoi(argv[++i]) != 0);
+        } else if (arg == "--help" || arg == "-h") {
+            PrintHelp();
+            return 0;
+        }
+    }
 
     if (!Init("BruhEngine - Stress Test", winW, winH)) {
         return -1;
     }
-
-    // Particles counts
-    const int particleCount = 41843; // Switch to 2000 (5x), 4000 (10x) or 8000 (20x) as needed
 
     int pixelWidth = winW, pixelHeight = winH;
     BruhEngine::GetDrawableSize(&pixelWidth, &pixelHeight);
@@ -90,28 +141,21 @@ int main() {
     }
     double overdrawFactor = totalVisibleArea / 4.0;
 
-    // Benchmark and Telemetry Opt-In
-    bool enableBenchmarkMode = true;
-
-    const float warmupTimer = 2.0f;
-
     TelemetryMonitor telemetry;
     telemetry.Init();
-    telemetry.SetVisible(false);
+    telemetry.SetVisible(telemetryVisible);
 
     BenchmarkRunner benchmark;
     if (enableBenchmarkMode) {
         std::string testConfigName = std::to_string(particleCount) +
         " Sprites | " + std::to_string(spritePixelWH) + "px | Pivot(0.5,0.5) | Commit:" + std::string(COMMIT_HASH);
 
-        benchmark.Configure(true, testConfigName, overdrawFactor, warmupTimer, 60.0);
-
-        BruhEngine::SetBlendEnabled(false); // Toggle blend for fill-rate testing
-        SetDepthEnabled(false); // Depth Toggle
-        SetVSync(false); // Toggle V-Sync
-    } else {
-        BruhEngine::SetBlendEnabled(true);
+        benchmark.Configure(true, testConfigName, overdrawFactor, warmupTimer, benchmarkDuration);
     }
+
+    BruhEngine::SetBlendEnabled(blendEnabled); // Toggle blend for fill-rate testing
+    SetDepthEnabled(depthEnabled); // Depth Toggle
+    SetVSync(vsyncEnabled); // Toggle V-Sync
 
     // Register event listener to toggle VSync on pressing 'V'
     SetEventCallback([&telemetry](const SDL_Event& e) {
@@ -152,23 +196,23 @@ int main() {
         bool shouldRecord = benchmark.EvaluateFrame(frameTime);
 
         // --- Get Exact Physical Framebuffer Pixels ---
-        int pixelWidth = winW, pixelHeight = winH;
-        BruhEngine::GetDrawableSize(&pixelWidth, &pixelHeight);
+        int curPixelW = winW, curPixelH = winH;
+        BruhEngine::GetDrawableSize(&curPixelW, &curPixelH);
         // ---------------------------------------------
 
         if (shouldRecord) {
             benchmark.RecordFrame(
                 (float)(frameTime * 1000.0),
                 overdrawFactor,
-                pixelWidth,
-                pixelHeight,
+                curPixelW,
+                curPixelH,
                 IsBlendEnabled(),
                 IsDepthEnabled(),
                 IsVSyncEnabled()
             );
         }
         telemetry.Update(frameTime);
-        telemetry.CalculateGpix((float)pixelWidth, (float)pixelHeight, overdrawFactor);
+        telemetry.CalculateGpix((float)curPixelW, (float)curPixelH, overdrawFactor);
 
         // Skip ImGui CPU overhead when HUD is hidden
         BruhEngine::SetImGuiEnabled(telemetry.IsVisible());
