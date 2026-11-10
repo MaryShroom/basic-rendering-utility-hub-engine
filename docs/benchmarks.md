@@ -40,6 +40,9 @@ Only compare runs that share the same window size, overdraw, blending and depth 
 - Overdraw = total sprite area, clipped to the window, / window area (1.0 means each pixel drawn once on average)
   - The code computes this once at startup from the real sprite geometry (centered pivot) and prints it in the report.
 - Gpix/s (derived) = overdraw x window width x window height x fps / 1e9
+  - The report prints two figures: "Derived Throughput" (mean of per-frame rates) and "Run-Average Gpix/s"
+    (total pixels submitted / total time). Record the run-average. The derived figure is inflated by frame-time
+    jitter (up to ~9% at high fps), so it is only listed in older rows.
   - Lets you compare machines fairly. Only meaningful for fill-bound runs (frame time grows with overdraw).
   - Only as accurate as the overdraw figure; print the exact overdraw from code instead of estimating.
   - Counts pixels submitted, not pixels actually shaded (depth-rejected and discarded pixels still count).
@@ -59,12 +62,23 @@ Fields marked (est.) were estimated, not measured. Gpix/s is derived (see sectio
 
 ### 4.1 PC-A results
 
-Window 700x700, vsync off, unless stated.
+Window 700x700, vsync off, depth off, 60 s after a 2 s warm-up, Release build, unless stated.
+Sprite size is given in pixels (35 px = 0.1 NDC at 700x700). Overdraw is the "Expected Overdraw" line of the report.
+Gpix/s here is the run-average figure. GPU load is N/A on this machine (radeon driver).
+Rows marked `898acb7-dirty` were built from 898acb7 with only `particleCount` and `spritePixelWH` edited (per the author; not checked against a diff).
 
-| Date | Commit | Test | Overdraw | Blend | Depth | Avg ms | Worst ms | FPS | Gpix/s (derived) | GPU load | CPU load | Temp | Notes |
+| Date | Commit | Test | Overdraw | Blend | Depth | Avg ms | Worst ms | FPS | Gpix/s (run-avg) | GPU load | CPU load | Temp | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 2026-11-10 | 9bb71d0-dirty | 10k sprites, 64 px | ~79.8x | on | off | 35.97 | 52.72 | 27.8 | 1.092 | N/A | 17% | 75 C | 60 s, Release. Run-average 1.088 Gpix/s. 1,668 frames. GPU load N/A (radeon driver). Rerun on a clean commit before relying on it. |
-| 2026-11-10 | not recorded | 10k sprites, 512 px | ~3,570x (analytic est.) | on | off | n/a | 1,281 (cut-off frame) | n/a | n/a | N/A | n/a | n/a | Aborted by the 100 ms cut-off before any frame was recorded, so no report. The single slow frame implies roughly 1.4 Gpix/s (rough; the 64 px run measured 1.09). Treat as "exceeds cut-off". |
+| 2026-11-10 | 898acb7-dirty | 2k sprites, 35 px | ~4.9x | on | off | 4.08 | 7.36 | 245.0 | 0.586 | N/A | 18% | 71 C | 14,702 frames. Derived 0.615. |
+| 2026-11-10 | 898acb7-dirty | 4k sprites, 35 px | ~9.7x | on | off | 6.32 | 9.48 | 158.1 | 0.755 | N/A | 15% | 74 C | 9,486 frames. Derived 0.759. |
+| 2026-11-10 | 898acb7-dirty | 8k sprites, 35 px | ~19.5x | on | off | 10.84 | 13.88 | 92.3 | 0.882 | N/A | 12% | 75 C | 5,535 frames. Derived 0.883. |
+| 2026-11-10 | 898acb7-dirty | 10k sprites, 35 px | ~24.4x | on | off | 12.55 | 15.74 | 79.7 | 0.953 | N/A | 12% | 77 C | 4,782 frames. Derived 0.954. |
+| 2026-11-10 | 898acb7-dirty | 2k sprites, 35 px, blend off | ~4.9x | off | off | 3.12 | 6.46 | 320.0 | 0.765 | N/A | 21% | 73 C | 19,201 frames. Derived 0.831 (jitter-inflated). |
+| 2026-11-10 | 898acb7-dirty | 4k sprites, 35 px, blend off | ~9.7x | off | off | 4.58 | 16.29 | 218.2 | 1.041 | N/A | 23% | 75 C | 13,092 frames. Worst frame is a one-off hitch (3.6x the average); do not quote it. |
+| 2026-11-10 | 898acb7-dirty | 8k sprites, 35 px, blend off | ~19.5x | off | off | 7.33 | 10.91 | 136.4 | 1.305 | N/A | 16% | 77 C | 8,185 frames. |
+| 2026-11-10 | 898acb7-dirty | 10k sprites, 35 px, blend off | ~24.4x | off | off | 7.78 | 10.61 | 128.6 | 1.538 | N/A | 16% | 82 C | 7,715 frames. Only +0.45 ms over 8k, flatter than the earlier steps; rerun once to check. |
+| 2026-11-10 | 898acb7 | 10k sprites, 64 px | ~79.8x | on | off | 34.37 | 40.80 | 29.1 | 1.138 | N/A | 13% | 73 C | 1,745 frames. Clean commit. Replaces the earlier dirty 64 px run (see 4.3). |
+| 2026-11-10 | not recorded | 10k sprites, 512 px | ~3,570x (analytic est.) | on | off | n/a | 1,281 (cut-off frame) | n/a | n/a | N/A | n/a | n/a | Aborted by the 100 ms cut-off before any frame was recorded, so no report. The single slow frame implies roughly 1.4 Gpix/s (rough; the clean 64 px run measured 1.14). Treat as "exceeds cut-off". |
 
 Early informal runs (before benchmark mode; window size, commit and CPU/GPU load not recorded):
 
@@ -106,20 +120,23 @@ on the current commit to measure real fill cost.
 
 ### 4.3 Dropped runs
 
-Removed from the tables above. The frame times were real, but the rows were unusable.
+Removed from the tables above. The frame times were real, but the rows were unusable or have been superseded.
 
 | Date | PC | Commit | What | Why dropped |
 |---|---|---|---|---|
 | 2026-11-08 | B | n/a | 60k sprites, 0.1 NDC | GPU load misread; window size and commit not recorded. |
 | 2026-11-08 | B | 4dbb38d | 2k, 4k, 8k, 10k sprites at 0.1 NDC, blend on and off (8 runs) | GPU load misread (fallback value). The 2k, 4k, 8k blend-on/off runs were redone on e615b36 and the 10k blend-on run too. **The 10k blend-off run has no replacement yet.** |
+| 2026-11-10 | A | 9bb71d0-dirty | 10k sprites, 64 px, blend on, depth off | Superseded by the clean rerun on 898acb7. Kept for the run-to-run spread: 35.97 ms / 1.088 Gpix/s here against 34.37 ms / 1.138 Gpix/s (about 5%). |
 
 ## 5. Planned runs
 
-- [ ] Overdraw 5x, 10x, 20x with blending on (PC-B done)
-- [ ] Same overdraw levels with blending off (PC-B done, except 10k)
-- [ ] 10k sprites at 0.1 NDC with blend off on PC-B (dropped run, no replacement)
+- [x] Overdraw 5x, 10x, 20x, 25x with blending on, 35 px, depth off (PC-A done)
+- [ ] Same on PC-B (the old PC-B rows are depth on and from older commits; rerun on the current commit)
+- [x] Same overdraw levels with blending off, including 10k (PC-A done)
+- [ ] Same on PC-B, including 10k with blend off (dropped run, no replacement)
 - [ ] Rerun the size sweep on the current commit with depth off (PC-B), then PC-A
-- [ ] Rerun the PC-A 64 px run on a clean (non-dirty) commit
+- [x] Rerun the PC-A 64 px run on a clean (non-dirty) commit (898acb7)
+- [ ] Rerun PC-A 8k and 10k blend-off once (the 8k to 10k step looks flat)
 - [ ] Opaque sprites with depth testing, drawn front to back
 - [ ] Re-run baseline after: camera, culling, atlas, render passes
 - [ ] Run the same tests on PC-B
@@ -157,7 +174,7 @@ The code prints the clipped value, which is lower (about 5% at 0.1 NDC, much low
 
 - Frame time barely changes with size: limited per sprite (CPU, vertex, driver side).
 - Frame time scales with area: limited per pixel (fill rate, blending).
-- PC-A caution: the HD 5450 measured about 1.09 Gpix/s (64 px run), so a 100 ms frame allows
+- PC-A caution: the HD 5450 measured about 1.1 Gpix/s (64 px run), so a 100 ms frame allows
   roughly 220x overdraw at 700x700. With 10k sprites that means sizes up to about 96 px. 128 px is
   predicted to exceed the cut-off and 512 px did (1,281 ms).
 
@@ -185,13 +202,22 @@ far below what its GPU can fill), while PC-A is more likely to be pixel-bound.
 ## 6. Findings
 
 - 10k sprites in one draw call is fine on both GPUs; the batcher works.
-- PC-A (HD 5450), 64 px run: 36 ms frames, ~1.09 Gpix/s, CPU load 17%. This looks GPU-bound, but there
-  is no GPU load counter on the radeon driver to confirm it. Confirm by halving sprite count or window
-  area and checking that frame time roughly halves.
+- PC-A (HD 5450), 10k sprites, 64 px, blend on: 34 ms frames, ~1.14 Gpix/s, CPU load 13%. This looks
+  GPU-bound, but there is no GPU load counter on the radeon driver to confirm it. Confirm by halving
+  sprite count or window area and checking that frame time roughly halves.
+- PC-A blending cost: blend adds about 0.195 ms per 1x of overdraw at 700x700. At 2k sprites that is
+  +0.96 ms (+31%); at 10k it is +4.77 ms (+61%). Frame time at 10k: 12.55 ms blend on, 7.78 ms blend off.
+- PC-A fill rate, two-point estimate: 10k sprites at 35 px (12.55 ms, 24.4x) against 64 px (34.37 ms, 79.8x)
+  gives about 0.39 ms per 1x of overdraw, roughly 1.24 Gpix/s with blending on. Extrapolating to zero
+  overdraw leaves about 3 ms per frame of non-pixel cost at 10k sprites.
+- The 35 px runs change sprite count and overdraw together, so they cannot separate per-sprite from per-pixel
+  cost on their own. Gpix/s rises with load (0.59 to 0.95 blend on); part of that is fixed per-frame cost,
+  and part may be the GPU clock rising under load (hypothesis, not checked).
+- Run-to-run spread on PC-A is about 5% (same 64 px config measured twice).
 - PC-B, depth on: frame time stays flat across a 25x to 160,000x nominal size sweep, so those runs do
   not measure fill rate (see the note under 4.2).
 - Practical budget: aim for roughly 5x-10x average overdraw in real scenes; measure the real ceiling with the planned runs.
-- PC-A reached 75 C in the 64 px run (88 C was recorded in an earlier informal run). Keep stress runs short.
+- PC-A temperature ranged 71 to 82 C across the 898acb7 runs (hottest: 10k sprites, blend off); 88 C was recorded in an earlier informal run. Keep stress runs short.
 
 ## 7. How to reproduce
 

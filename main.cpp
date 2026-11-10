@@ -29,13 +29,15 @@ struct Particle {
 
 int main() {
     int winW = 700, winH = 700;
-    int spritePixelWH = 64; // For now, width and height sprite size is same, in px
+
+    // Pixel size 35px = 0.1 NDC size
+    int spritePixelWH = 35; // For now, width and height sprite size is same, in px
 
     if (!Init("BruhEngine - Stress Test", winW, winH)) {
         return -1;
     }
 
-    // Particles count
+    // Particles counts
     const int particleCount = 10000; // Switch to 2000 (5x), 4000 (10x) or 8000 (20x) as needed
 
     int pixelWidth = winW, pixelHeight = winH;
@@ -104,7 +106,7 @@ int main() {
 
         benchmark.Configure(true, testConfigName, overdrawFactor, warmupTimer, 60.0);
 
-        BruhEngine::SetBlendEnabled(true); // Toggle blend for fill-rate testing
+        BruhEngine::SetBlendEnabled(false); // Toggle blend for fill-rate testing
         SetDepthEnabled(false); // Depth Toggle
         SetVSync(false); // Toggle V-Sync
     } else {
