@@ -10,7 +10,6 @@ void BenchmarkRunner::Configure(bool enabled, std::string testName, float expect
     m_TestName = testName;
     m_ExpectedOverdraw = expectedOverdraw;
     m_FrameTimes.clear();
-    m_OverdrawSamples.clear();
     m_PixelCounts.clear();
     m_GpixSamples.clear();
     m_GPULoadSamples.clear();
@@ -18,7 +17,6 @@ void BenchmarkRunner::Configure(bool enabled, std::string testName, float expect
     m_GPUTempSamples.clear();
 
     m_FrameTimes.reserve(60000);
-    m_OverdrawSamples.reserve(60000);
     m_PixelCounts.reserve(60000);
     m_GpixSamples.reserve(60000);
     m_GPULoadSamples.reserve(60000);
@@ -29,6 +27,7 @@ void BenchmarkRunner::Configure(bool enabled, std::string testName, float expect
     m_RunLength = runSeconds;
     m_CurrentWarmupTime = 0.0;
     m_CurrentRunTime = 0.0;
+    m_HardwareSampleTimer = 0.0;
     m_WarmupComplete = false;
     m_BenchmarkComplete = false;
 }
@@ -86,7 +85,6 @@ void BenchmarkRunner::RecordFrame(float ms, double overdrawFactor, int windowWid
     if (!m_Enabled) return;
 
     m_FrameTimes.push_back(ms);
-    m_OverdrawSamples.push_back(overdrawFactor);
 
     double framePixels = (double)windowWidth * (double)windowHeight;
     m_PixelCounts.push_back(framePixels);
@@ -115,15 +113,13 @@ void BenchmarkRunner::FinalizeAndPrint() {
     float worstMs = *std::max_element(m_FrameTimes.begin(), m_FrameTimes.end());
     float avgFPS = (totalElapsedSeconds > 0.0) ? (float)(m_FrameTimes.size() / totalElapsedSeconds) : 0.0f;
 
-    double avgOverdraw = std::accumulate(m_OverdrawSamples.begin(), m_OverdrawSamples.end(), 0.0) / m_OverdrawSamples.size();
-
     // 1. Derived Throughput (Arithmetic mean of per-frame instantaneous Gpix/s)
     double derivedThroughput = std::accumulate(m_GpixSamples.begin(), m_GpixSamples.end(), 0.0) / m_GpixSamples.size();
 
     // 2. Run-Average Gpix/s: Total gigapixels submitted across all frames ÷ Total Elapsed Seconds
     double totalGpixelsSubmitted = 0.0;
     for (size_t i = 0; i < m_FrameTimes.size(); ++i) {
-        totalGpixelsSubmitted += (m_OverdrawSamples[i] * m_PixelCounts[i]) / 1'000'000'000.0;
+        totalGpixelsSubmitted += ((double)m_ExpectedOverdraw * m_PixelCounts[i]) / 1'000'000'000.0;
     }
     double runAverageGpixPerSec = (totalElapsedSeconds > 0.0) ? (totalGpixelsSubmitted / totalElapsedSeconds) : 0.0;
 
@@ -161,7 +157,6 @@ void BenchmarkRunner::FinalizeAndPrint() {
     std::cout << " Depth Test:            " << depthCol << "\n";
     std::cout << " VSync:                 " << vsyncCol << "\n";
     std::cout << " Expected Overdraw:     ~" << std::fixed << std::setprecision(1) << m_ExpectedOverdraw << "x\n";
-    std::cout << " Avg Overdraw:          ~" << std::fixed << std::setprecision(1) << avgOverdraw << "x\n";
     std::cout << " Avg Frame Time:        " << std::setprecision(2) << avgMs << " ms\n";
     std::cout << " Worst Frame Time:      " << worstMs << " ms\n";
     std::cout << " Average FPS:           " << std::setprecision(1) << avgFPS << "\n";

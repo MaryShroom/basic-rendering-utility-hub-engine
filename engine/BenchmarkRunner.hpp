@@ -28,7 +28,6 @@ private:
     std::string m_TestName = "Default";
     float m_ExpectedOverdraw = 0.0f;
     std::vector<float> m_FrameTimes;
-    std::vector<double> m_OverdrawSamples;
     std::vector<double> m_PixelCounts;
     std::vector<double> m_GpixSamples;
 
