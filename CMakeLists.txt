@@ -57,17 +57,16 @@ target_link_libraries(imgui PUBLIC SDL2::SDL2)
 # --- Git Version Generation Setup ---
 set(GIT_VERSION_FILE "${CMAKE_BINARY_DIR}/GeneratedGitVersion.hpp")
 
-add_custom_command(
-    OUTPUT "${GIT_VERSION_FILE}"
+add_custom_target(UpdateGitVersion ALL
     COMMAND ${CMAKE_COMMAND}
-        -DOUTPUT_FILE="${GIT_VERSION_FILE}"
+        "-DOUTPUT_FILE=${GIT_VERSION_FILE}"
         -P "${CMAKE_SOURCE_DIR}/cmake/GetGitHash.cmake"
+    BYPRODUCTS "${GIT_VERSION_FILE}"
     COMMENT "Checking Git revision and source status..."
     VERBATIM
 )
 
-add_custom_target(GenerateGitVersion DEPENDS "${GIT_VERSION_FILE}")
-
+# Main and thirdparty sources (includes generated header so CMake tracks the build dependency)
 add_executable(BasicRenderingUtilityHub
     main.cpp
     engine/bruh.cpp
@@ -77,7 +76,7 @@ add_executable(BasicRenderingUtilityHub
     thirdparty/glad/src/gl.c
 )
 
-add_dependencies(BasicRenderingUtilityHub GenerateGitVersion)
+add_dependencies(BasicRenderingUtilityHub UpdateGitVersion)
 
 target_include_directories(BasicRenderingUtilityHub PRIVATE
     thirdparty/glad/include
