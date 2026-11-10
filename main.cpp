@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include <string>
+#include <cmath>
 #include <SDL.h>
 
 #ifndef COMMIT_HASH
@@ -26,9 +27,9 @@ void PrintHelp() {
               << "Usage: BruhEngineBenchmark [options]\n\n"
               << "Options:\n"
               << "  --window <w> <h>   Window width and height (default: 700 700)\n"
-              << "  --count <int>     Particle / sprite counts (default: 10000)\n"
+              << "  --count <int>      Particle / sprite count (default: 10000)\n"
               << "  --pixels <int>     Sprite size width/height in pixels (default: 35)\n"
-              << "  --blend <0|1>      Enable alpha blending (default: 0)\n"
+              << "  --blend <0|1>      Enable alpha blending (default: 1)\n"
               << "  --depth <0|1>      Enable depth testing (default: 0)\n"
               << "  --vsync <0|1>      Enable VSync (default: 0)\n"
               << "  --telemetry <0|1>  Initial telemetry HUD visibility (default: 0)\n"
@@ -36,6 +37,45 @@ void PrintHelp() {
               << "  --warmup <sec>     Warmup grace period in seconds (default: 2.0)\n"
               << "  --benchmark <0|1>  Enable automated benchmark runner (default: 1)\n"
               << "  -h, --help         Display this help message\n";
+}
+
+// Strict helper to parse and validate integers without trailing garbage
+bool ParseStrictInt(const std::string& str, int& outVal) {
+    size_t idx = 0;
+    try {
+        int val = std::stoi(str, &idx);
+        if (idx != str.length()) return false; // Contains trailing characters (e.g., "1e4", "12abc", "3.5")
+        outVal = val;
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
+// Strict helper to parse and validate doubles (rejects non-finite like nan/inf)
+bool ParseStrictDouble(const std::string& str, double& outVal) {
+    size_t idx = 0;
+    try {
+        double val = std::stod(str, &idx);
+        if (idx != str.length()) return false;
+        if (!std::isfinite(val)) return false; // Reject inf, -inf, nan
+        outVal = val;
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
+// Strict helper for 0 | 1 flags
+bool ParseBoolFlag(const std::string& str, bool& outVal) {
+    if (str == "0") {
+        outVal = false;
+        return true;
+    } else if (str == "1") {
+        outVal = true;
+        return true;
+    }
+    return false; // Reject anything else like "2", "-1", etc.
 }
 
 struct Particle {
@@ -50,98 +90,141 @@ int main(int argc, char* argv[]) {
     int particleCount = 10000;       // 2000 (5x), 4000 (10x) or 8000 (20x)
     int spritePixelWH = 35;          // Pixel size 35px = 0.1 NDC size | For now, width and height sprite size is same, in px
     bool enableBenchmarkMode = true; // Benchmark and Telemetry Opt-In
-    bool blendEnabled = false;
+    bool blendEnabled = true;
     bool depthEnabled = false;
     bool vsyncEnabled = false;
     bool telemetryVisible = false;
     double benchmarkDuration = 60.0;
     double warmupTimer = 2.0f;
 
-    // Parse Command-Line Arguments
-    for (int i = 1; i < argc; ++i) {
+    // Parse Command-Line Arguments with Strict Validation
+for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        try {
-            if (arg == "--window") {
-                if (i + 2 >= argc) {
-                    std::cerr << "Error: --window requires two arguments (width and height).\n";
-                    PrintHelp();
-                    return -1;
-                }
-                winW = std::stoi(argv[++i]);
-                winH = std::stoi(argv[++i]);
-            } else if (arg == "--count" || arg == "-c") {
-                if (i + 1 >= argc) {
-                    std::cerr << "Error: --count requires an integer argument.\n";
-                    PrintHelp();
-                    return -1;
-                }
-                particleCount = std::stoi(argv[++i]);
-            } else if (arg == "--pixels" || arg == "-p") {
-                if (i + 1 >= argc) {
-                    std::cerr << "Error: --pixels requires an integer argument.\n";
-                    PrintHelp();
-                    return -1;
-                }
-                spritePixelWH = std::stoi(argv[++i]);
-            } else if (arg == "--blend" || arg == "-b") {
-                if (i + 1 >= argc) {
-                    std::cerr << "Error: --blend requires a 0 or 1 argument.\n";
-                    PrintHelp();
-                    return -1;
-                }
-                blendEnabled = (std::stoi(argv[++i]) != 0);
-            } else if (arg == "--depth" || arg == "-d") {
-                if (i + 1 >= argc) {
-                    std::cerr << "Error: --depth requires a 0 or 1 argument.\n";
-                    PrintHelp();
-                    return -1;
-                }
-                depthEnabled = (std::stoi(argv[++i]) != 0);
-            } else if (arg == "--vsync" || arg == "-v") {
-                if (i + 1 >= argc) {
-                    std::cerr << "Error: --vsync requires a 0 or 1 argument.\n";
-                    PrintHelp();
-                    return -1;
-                }
-                vsyncEnabled = (std::stoi(argv[++i]) != 0);
-            } else if (arg == "--telemetry") {
-                if (i + 1 >= argc) {
-                    std::cerr << "Error: --telemetry requires a 0 or 1 argument.\n";
-                    PrintHelp();
-                    return -1;
-                }
-                telemetryVisible = (std::stoi(argv[++i]) != 0);
-            } else if (arg == "--duration") {
-                if (i + 1 >= argc) {
-                    std::cerr << "Error: --duration requires a numerical value.\n";
-                    PrintHelp();
-                    return -1;
-                }
-                benchmarkDuration = std::stod(argv[++i]);
-            } else if (arg == "--warmup") {
-                if (i + 1 >= argc) {
-                    std::cerr << "Error: --warmup requires a numerical value.\n";
-                    PrintHelp();
-                    return -1;
-                }
-                warmupTimer = std::stod(argv[++i]);
-            } else if (arg == "--benchmark") {
-                if (i + 1 >= argc) {
-                    std::cerr << "Error: --benchmark requires a 0 or 1 argument.\n";
-                    PrintHelp();
-                    return -1;
-                }
-                enableBenchmarkMode = (std::stoi(argv[++i]) != 0);
-            } else if (arg == "--help" || arg == "-h") {
-                PrintHelp();
-                return 0;
-            } else {
-                std::cerr << "Error: Unrecognized argument '" << arg << "'\n";
+        if (arg == "--window") {
+            if (i + 2 >= argc) {
+                std::cerr << "Error: --window requires two arguments (width and height).\n";
                 PrintHelp();
                 return -1;
             }
-        } catch (const std::exception& e) {
-            std::cerr << "Error: Invalid value provided for '" << arg << "' (conversion failed: " << e.what() << ")\n";
+            if (!ParseStrictInt(argv[i + 1], winW) || !ParseStrictInt(argv[i + 2], winH)) {
+                std::cerr << "Error: Invalid integer values provided for --window.\n";
+                PrintHelp();
+                return -1;
+            }
+            i += 2;
+        } else if (arg == "--count" || arg == "-c") {
+            if (i + 1 >= argc) {
+                std::cerr << "Error: --count requires an integer argument.\n";
+                PrintHelp();
+                return -1;
+            }
+            if (!ParseStrictInt(argv[i + 1], particleCount)) {
+                std::cerr << "Error: Invalid or malformed integer value for --count: '" << argv[i + 1] << "'\n";
+                PrintHelp();
+                return -1;
+            }
+            i++;
+        } else if (arg == "--pixels" || arg == "-p") {
+            if (i + 1 >= argc) {
+                std::cerr << "Error: --pixels requires an integer argument.\n";
+                PrintHelp();
+                return -1;
+            }
+            if (!ParseStrictInt(argv[i + 1], spritePixelWH)) {
+                std::cerr << "Error: Invalid or malformed integer value for --pixels: '" << argv[i + 1] << "'\n";
+                PrintHelp();
+                return -1;
+            }
+            i++;
+        } else if (arg == "--blend" || arg == "-b") {
+            if (i + 1 >= argc) {
+                std::cerr << "Error: --blend requires a 0 or 1 argument.\n";
+                PrintHelp();
+                return -1;
+            }
+            if (!ParseBoolFlag(argv[i + 1], blendEnabled)) {
+                std::cerr << "Error: --blend requires exact value '0' or '1', got '" << argv[i + 1] << "'\n";
+                PrintHelp();
+                return -1;
+            }
+            i++;
+        } else if (arg == "--depth" || arg == "-d") {
+            if (i + 1 >= argc) {
+                std::cerr << "Error: --depth requires a 0 or 1 argument.\n";
+                PrintHelp();
+                return -1;
+            }
+            if (!ParseBoolFlag(argv[i + 1], depthEnabled)) {
+                std::cerr << "Error: --depth requires exact value '0' or '1', got '" << argv[i + 1] << "'\n";
+                PrintHelp();
+                return -1;
+            }
+            i++;
+        } else if (arg == "--vsync" || arg == "-v") {
+            if (i + 1 >= argc) {
+                std::cerr << "Error: --vsync requires a 0 or 1 argument.\n";
+                PrintHelp();
+                return -1;
+            }
+            if (!ParseBoolFlag(argv[i + 1], vsyncEnabled)) {
+                std::cerr << "Error: --vsync requires exact value '0' or '1', got '" << argv[i + 1] << "'\n";
+                PrintHelp();
+                return -1;
+            }
+            i++;
+        } else if (arg == "--telemetry") {
+            if (i + 1 >= argc) {
+                std::cerr << "Error: --telemetry requires a 0 or 1 argument.\n";
+                PrintHelp();
+                return -1;
+            }
+            if (!ParseBoolFlag(argv[i + 1], telemetryVisible)) {
+                std::cerr << "Error: --telemetry requires exact value '0' or '1', got '" << argv[i + 1] << "'\n";
+                PrintHelp();
+                return -1;
+            }
+            i++;
+        } else if (arg == "--duration") {
+            if (i + 1 >= argc) {
+                std::cerr << "Error: --duration requires a numerical value.\n";
+                PrintHelp();
+                return -1;
+            }
+            if (!ParseStrictDouble(argv[i + 1], benchmarkDuration)) {
+                std::cerr << "Error: Invalid or non-finite numerical value for --duration: '" << argv[i + 1] << "'\n";
+                PrintHelp();
+                return -1;
+            }
+            i++;
+        } else if (arg == "--warmup") {
+            if (i + 1 >= argc) {
+                std::cerr << "Error: --warmup requires a numerical value.\n";
+                PrintHelp();
+                return -1;
+            }
+            if (!ParseStrictDouble(argv[i + 1], warmupTimer)) {
+                std::cerr << "Error: Invalid or non-finite numerical value for --warmup: '" << argv[i + 1] << "'\n";
+                PrintHelp();
+                return -1;
+            }
+            i++;
+        } else if (arg == "--benchmark") {
+            if (i + 1 >= argc) {
+                std::cerr << "Error: --benchmark requires a 0 or 1 argument.\n";
+                PrintHelp();
+                return -1;
+            }
+            if (!ParseBoolFlag(argv[i + 1], enableBenchmarkMode)) {
+                std::cerr << "Error: --benchmark requires exact value '0' or '1', got '" << argv[i + 1] << "'\n";
+                PrintHelp();
+                return -1;
+            }
+            i++;
+        } else if (arg == "--help" || arg == "-h") {
+            PrintHelp();
+            return 0;
+        } else {
+            std::cerr << "Error: Unrecognized argument '" << arg << "'\n";
             PrintHelp();
             return -1;
         }
