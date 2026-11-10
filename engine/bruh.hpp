@@ -31,4 +31,6 @@ namespace BruhEngine {
     bool IsBlendEnabled();
     void SetDepthEnabled(bool enabled);
     bool IsDepthEnabled();
+
+    void SetImGuiEnabled(bool enabled);
 }

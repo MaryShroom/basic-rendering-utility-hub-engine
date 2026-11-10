@@ -57,6 +57,8 @@ target_link_libraries(imgui PUBLIC SDL2::SDL2)
 # --- Git Version Generation Setup ---
 set(GIT_VERSION_FILE "${CMAKE_BINARY_DIR}/GeneratedGitVersion.hpp")
 
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/cmake/GetGitHash.cmake")
+
 add_custom_target(UpdateGitVersion ALL
     COMMAND ${CMAKE_COMMAND}
         "-DOUTPUT_FILE=${GIT_VERSION_FILE}"

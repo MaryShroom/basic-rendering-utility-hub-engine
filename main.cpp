@@ -168,6 +168,9 @@ int main() {
         telemetry.Update(frameTime);
         telemetry.CalculateGpix((float)pixelWidth, (float)pixelHeight, overdrawFactor);
 
+        // Skip ImGui CPU overhead when HUD is hidden
+        BruhEngine::SetImGuiEnabled(telemetry.IsVisible());
+
         BeginBatch();
         for (const auto& p : particles) {
             DrawQuad(p.x, p.y, spriteWidth, spriteHeight, p.color);

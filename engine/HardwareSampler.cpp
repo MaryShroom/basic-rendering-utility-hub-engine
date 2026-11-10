@@ -51,8 +51,6 @@ HardwareMetrics HardwareSampler::Sample() {
     }
 
     // Read GPU Temp dynamically from all available hwmon directories
-    metrics.gpuTemp = 0.0; // Default fallback
-
     try {
         if (std::filesystem::exists("/sys/class/hwmon")) {
             for (const auto& entry : std::filesystem::directory_iterator("/sys/class/hwmon")) {

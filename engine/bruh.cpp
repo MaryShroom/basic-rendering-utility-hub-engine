@@ -62,6 +62,8 @@ namespace BruhEngine {
         "   FragColor = texture(u_Texture, TexCoord) * vec4(fragColor, 1.0);\n"
         "}\n";
 
+    static bool s_ImGuiEnabled = true;
+
     bool Init(const char* title, int width, int height) {
         // Initialize SDL
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -353,15 +355,21 @@ namespace BruhEngine {
         s_EventCallback = callback;
     }
 
+    void SetImGuiEnabled(bool enabled) {
+        s_ImGuiEnabled = enabled;
+    }
+
     void BeginBatch() {
         glClearColor(0.1f, 0.12f, 0.16f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         s_DrawCalls = 0;
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
-        ImGui::NewFrame();
+        if (s_ImGuiEnabled) {
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplSDL2_NewFrame();
+            ImGui::NewFrame();
+        }
 
         if (batcher && shader && texture) batcher->BeginBatch(*shader, *texture);
     }
@@ -374,8 +382,10 @@ namespace BruhEngine {
         if (batcher) batcher->Flush();
 
         // Render ImGui draw data over the engine scene
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        if (s_ImGuiEnabled) {
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        }
     }
 
     void SetBlendEnabled(bool enabled) {
