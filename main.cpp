@@ -33,6 +33,7 @@ void PrintHelp() {
               << "  --depth <0|1>      Enable depth testing (default: 0)\n"
               << "  --vsync <0|1>      Enable VSync (default: 0)\n"
               << "  --telemetry <0|1>  Initial telemetry HUD visibility (default: 0)\n"
+              << "  --autoexit <0|1>   Automatically exit when benchmark finishes (default: 0)\n"
               << "  --duration <sec>   Active benchmark run duration in seconds (default: 60.0)\n"
               << "  --warmup <sec>     Warmup grace period in seconds (default: 2.0)\n"
               << "  --benchmark <0|1>  Enable automated benchmark runner (default: 1)\n"
@@ -94,11 +95,12 @@ int main(int argc, char* argv[]) {
     bool depthEnabled = false;
     bool vsyncEnabled = false;
     bool telemetryVisible = false;
+    bool autoExitEnabled = false;
     double benchmarkDuration = 60.0;
     double warmupTimer = 2.0f;
 
     // Parse Command-Line Arguments with Strict Validation
-for (int i = 1; i < argc; ++i) {
+    for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg == "--window") {
             if (i + 2 >= argc) {
@@ -184,6 +186,18 @@ for (int i = 1; i < argc; ++i) {
                 return -1;
             }
             i++;
+        } else if (arg == "--autoexit") {
+            if (i + 1 >= argc) {
+                std::cerr << "Error: --autoexit requires a 0 or 1 argument.\n";
+                PrintHelp();
+                return -1;
+            }
+            if (!ParseBoolFlag(argv[i + 1], autoExitEnabled)) {
+                std::cerr << "Error: --autoexit requires exact value '0' or '1', got '" << argv[i + 1] << "'\n";
+                PrintHelp();
+                return -1;
+            }
+            i++;
         } else if (arg == "--duration") {
             if (i + 1 >= argc) {
                 std::cerr << "Error: --duration requires a numerical value.\n";
@@ -231,8 +245,8 @@ for (int i = 1; i < argc; ++i) {
     }
 
     // --- Range & Sanity Validation ---
-    if (particleCount < 0) {
-        std::cerr << "Error: Particle count cannot be negative (" << particleCount << ").\n";
+    if (particleCount <= 0) {
+        std::cerr << "Error: Particle count must be greater than 0 (" << particleCount << ").\n";
         return -1;
     }
     if (spritePixelWH <= 0) {
@@ -349,6 +363,8 @@ for (int i = 1; i < argc; ++i) {
 
     // Keep track of time for precise per-frame delta in main.cpp
     Uint64 lastCounter = SDL_GetPerformanceCounter();
+    bool wasRecording = false;
+    bool benchmarkFinished = false;
 
     // Custom render logic: what to draw each frame
     auto renderLogic = [&]() {
@@ -359,6 +375,18 @@ for (int i = 1; i < argc; ++i) {
         if (frameTime > 0.25) frameTime = 0.25; // Clamp lag spikes
 
         bool shouldRecord = benchmark.EvaluateFrame(frameTime);
+
+        // Track benchmark state transitions for auto-exit
+        if (shouldRecord) {
+            wasRecording = true;
+        } else if (wasRecording && !benchmarkFinished && enableBenchmarkMode) {
+            benchmarkFinished = true;
+            if (autoExitEnabled) {
+                SDL_Event quitEvent;
+                quitEvent.type = SDL_QUIT;
+                SDL_PushEvent(&quitEvent);
+            }
+        }
 
         // --- Get Exact Physical Framebuffer Pixels ---
         int curPixelW = winW, curPixelH = winH;

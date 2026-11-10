@@ -90,6 +90,15 @@ Cooldown of 5 minutes between runs. The 35 px point is the S2-10000 blend-on row
 | 2026-11-10 | ef2068b-dirty | S1-64: 10k sprites, 64 px | ~79.8x | on | off | 34.20 | 40.82 | 29.2 | 1.144 | N/A | 8% | 72 C | 1,754 frames. Matches the clean 898acb7 run (34.37 ms). |
 | 2026-11-10 | ef2068b-dirty | S1-96: 10k sprites, 96 px | ~175.4x | on | off | 70.86 | 75.15 | 14.1 | 1.213 | N/A | 5% | 72 C | 846 frames. Predicted 70 to 80 ms. |
 
+#### Size sweep (S1), blend off: 10k sprites, depth off
+
+The 35 px point is the S2-10000 blend-off row below (7.76 ms). Predicted before the runs: 18 to 20 ms (64 px) and 36 to 40 ms (96 px).
+
+| Date | Commit | Test | Overdraw | Blend | Depth | Avg ms | Worst ms | FPS | Gpix/s (run-avg) | GPU load | CPU load | Temp | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2026-11-10 | f2144dd | S1-64: 10k sprites, 64 px, blend off | ~79.8x | off | off | 19.96 | 22.70 | 50.1 | 1.961 | N/A | 10% | 74 C | 3,006 frames. Clean commit. Inside the predicted range. |
+| 2026-11-10 | f2144dd | S1-96: 10k sprites, 96 px, blend off | ~175.4x | off | off | 40.53 | 42.58 | 24.7 | 2.121 | N/A | 7% | 75 C | 1,480 frames. About 1% above the predicted range. |
+
 #### Same-overdraw sweep (S2): about 24.4x, depth off
 
 Sprite count rises 17x while the overdraw stays the same. Cooldown of 2 minutes between runs. Draw calls = ceil(count / 10,000).
@@ -171,6 +180,7 @@ Removed from the tables above. The frame times were real, but the rows were unus
 - [x] Same overdraw levels with blending off, including 10k (PC-A done)
 - [ ] Same on PC-B, including 10k with blend off (dropped run, no replacement)
 - [x] Size sweep with depth off on PC-A (10k sprites at 35, 64, 96 px, blend on)
+- [x] Blend-off repeat of the size sweep at 64 and 96 px on PC-A
 - [ ] Same size sweep with depth off on PC-B
 - [x] Rerun the PC-A 64 px run on a clean (non-dirty) commit (898acb7)
 - [x] Rerun PC-A 8k and 10k blend-off once (10k 7.76 ms, 8k 6.96 ms; the flat step was mostly noise)
@@ -256,6 +266,15 @@ far below what its GPU can fill), while PC-A is more likely to be pixel-bound.
 - Blend penalty at equal overdraw grows as sprites get smaller: about 0.18 ms per 1x at 71 px, 0.195 at 50 and
   35 px, 0.22 at 25 px, 0.27 at 17 px. Possible cause: more partly covered pixel quads on small sprites
   (hypothesis, not tested).
+- Blend-off size sweep (10k sprites, depth off): 35 / 64 / 96 px give 7.76 / 19.96 / 40.53 ms. The slope is
+  0.217 ms per 1x (about 2.26 Gpix/s) against 0.386 ms per 1x (1.27 Gpix/s) with blend on, so blending
+  costs about 1.8x per pixel on this card. The blend cost per 1x of overdraw is 0.195 ms at 35 px, 0.178 at
+  64 px and 0.173 at 96 px, so it depends mostly on sprite size and not on how much overdraw there is.
+  The 64 px result fell inside my predicted range and 96 px came out about 1% above it.
+- Possible memory-bandwidth ceiling (hypothesis, not verified): at 4 bytes per pixel, blend off writes about
+  9 GB/s and blend on (read plus write) moves about 10 GB/s, nearly the same. That fits a fill rate limited by
+  memory bandwidth or ROPs. Confirming it needs this board's memory type, bus width and memory clock, which
+  vary between HD 5450 models.
 - Gpix/s rises with load in the 35 px runs (0.59 to 0.95 blend on); that is mostly the fixed per-frame cost,
   and part may be the GPU clock rising under load (hypothesis, not checked).
 - Run-to-run spread on PC-A is usually under 1%: 10k, 35 px, blend off measured 7.78, 7.76 and 7.76 ms;
@@ -271,7 +290,7 @@ far below what its GPU can fill), while PC-A is more likely to be pixel-bound.
 - Build: `cmake -S . -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release` then `cmake --build build-release`
 - Run with Mesa's overlay: `GALLIUM_HUD="fps,frametime" ./build-release/<executable>`
   (use `GALLIUM_HUD=help` to list the counters your driver exposes)
-- Stress test controls: V toggles vsync, H toggles the HUD, D toggles depth test. Sprite count, size, blend and depth start state are set in main.cpp.
+- Stress test controls: V toggles vsync, H toggles the HUD, D toggles depth test. The start state is set with command-line flags (see `--help`): `--count`, `--pixels`, `--blend`, `--depth`, `--vsync`, `--window`, `--duration`, `--warmup`, `--telemetry`, `--benchmark`. Since f2144dd `--blend` defaults to 1 (earlier commits defaulted to 0), so pass `--blend 0` for blend-off runs. Example: `./build-release/BasicRenderingUtilityHub --count 41843 --pixels 17 --blend 0`
 - Note: `GALLIUM_HUD` only works with Mesa Gallium drivers. It also costs a little frame time, so compare with it off for final numbers.
 
 ## 8. Rules of thumb
