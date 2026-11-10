@@ -33,7 +33,7 @@ void BenchmarkRunner::Configure(bool enabled, std::string testName, float expect
     m_BenchmarkComplete = false;
 }
 
-bool BenchmarkRunner::EvaluateFrame(double frameTime, bool& /*isRunning*/) {
+bool BenchmarkRunner::EvaluateFrame(double frameTime) {
     if (!m_Enabled) return true;
 
     if (!m_WarmupComplete) {

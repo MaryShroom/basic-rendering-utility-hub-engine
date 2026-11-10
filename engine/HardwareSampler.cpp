@@ -1,5 +1,6 @@
 #include "HardwareSampler.hpp"
 #include <fstream>
+#include <filesystem>
 #include <string>
 
 HardwareSampler::HardwareSampler() = default;
@@ -49,28 +50,43 @@ HardwareMetrics HardwareSampler::Sample() {
         }
     }
 
-    // Read GPU Temp from /sys/class/hwmon/hwmon* (expanded range up to 64)
-    for (int i = 0; i < 64; ++i) {
-        std::string hwmonDir = "/sys/class/hwmon/hwmon" + std::to_string(i) + "/";
-        std::ifstream nameFile(hwmonDir + "name");
-        if (nameFile.is_open()) {
-            std::string driverName;
-            nameFile >> driverName;
-            // Added "radeon" for legacy driver compatibility
-            if (driverName == "amdgpu" || driverName == "radeon" || driverName == "nvidia" || driverName == "nouveau") {
-                std::ifstream tempFile(hwmonDir + "temp1_input");
-                if (tempFile.is_open()) {
-                    long long tempMilliC = 0; // Properly initialized to prevent uninitialized reads
-                    if (tempFile >> tempMilliC) {
-                        double tempC = tempMilliC / 1000.0;
-                        if (tempC > 0 && tempC < 150) {
-                            metrics.gpuTemp = tempC;
-                            break;
+    // Read GPU Temp dynamically from all available hwmon directories
+    metrics.gpuTemp = 0.0; // Default fallback
+
+    try {
+        if (std::filesystem::exists("/sys/class/hwmon")) {
+            for (const auto& entry : std::filesystem::directory_iterator("/sys/class/hwmon")) {
+                if (!entry.is_directory()) continue;
+
+                std::filesystem::path hwmonDir = entry.path();
+                std::ifstream nameFile(hwmonDir / "name");
+                if (!nameFile.is_open()) continue;
+
+                std::string driverName;
+                std::getline(nameFile, driverName);
+
+                // Trim potential trailing newline or carriage return characters
+                driverName.erase(driverName.find_last_not_of(" \n\r\t") + 1);
+
+                if (driverName == "amdgpu" || driverName == "radeon" || driverName == "nvidia" || driverName == "nouveau") {
+                    std::ifstream tempFile(hwmonDir / "temp1_input");
+                    if (tempFile.is_open()) {
+                        long long tempMilliC = 0;
+                        if (tempFile >> tempMilliC) {
+                            double tempC = (double)tempMilliC / 1000.0;
+                            // Valid operating range check
+                            if (tempC > 0.0 && tempC < 150.0) {
+                                metrics.gpuTemp = tempC;
+                                break; // Successfully found and read GPU temp
+                            }
                         }
                     }
                 }
             }
         }
+    } catch (const std::exception& e) {
+        // Catch any filesystem iteration errors gracefully
+        metrics.gpuTemp = 0.0;
     }
 
     return metrics;

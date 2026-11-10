@@ -12,6 +12,7 @@
 #include <vector>
 #include <cstdlib>
 #include <algorithm>
+#include <string>
 #include <SDL.h>
 
 #ifndef COMMIT_HASH
@@ -28,6 +29,7 @@ struct Particle {
 
 int main() {
     int winW = 700, winH = 700;
+    int spritePixelWH = 64; // For now, width and height sprite size is same, in px
 
     if (!Init("BruhEngine - Stress Test", winW, winH)) {
         return -1;
@@ -40,8 +42,8 @@ int main() {
     BruhEngine::GetDrawableSize(&pixelWidth, &pixelHeight);
 
     // Particles size (converted pixel target into proper NDC scale)
-    float spriteWidth = 512.0f / (float)pixelWidth * 2.0f;
-    float spriteHeight = 512.0f / (float)pixelHeight * 2.0f;
+    float spriteWidth = (float)spritePixelWH / (float)pixelWidth * 2.0f;
+    float spriteHeight = (float)spritePixelWH / (float)pixelHeight * 2.0f;
 
     // Initialize however many moving particles
     std::vector<Particle> particles(particleCount);
@@ -98,7 +100,7 @@ int main() {
     BenchmarkRunner benchmark;
     if (enableBenchmarkMode) {
         std::string testConfigName = std::to_string(particleCount) +
-        " Sprites | 512px | Pivot(0.5,0.5) | Commit:" + std::string(COMMIT_HASH);
+        " Sprites | " + std::to_string(spritePixelWH) + "px | Pivot(0.5,0.5) | Commit:" + std::string(COMMIT_HASH);
 
         benchmark.Configure(true, testConfigName, overdrawFactor, warmupTimer, 60.0);
 
@@ -121,8 +123,6 @@ int main() {
             }
         }
     });
-
-    bool isRunning = true;
 
     // Fixed update: move particles and bounce off screen edges
     auto updateLogic = [&](float fixedDt) {
@@ -147,7 +147,7 @@ int main() {
 
         if (frameTime > 0.25) frameTime = 0.25; // Clamp lag spikes
 
-        bool shouldRecord = benchmark.EvaluateFrame(frameTime, isRunning);
+        bool shouldRecord = benchmark.EvaluateFrame(frameTime);
 
         // --- Get Exact Physical Framebuffer Pixels ---
         int pixelWidth = winW, pixelHeight = winH;

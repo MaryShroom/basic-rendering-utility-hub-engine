@@ -10,7 +10,7 @@ public:
     void Configure(bool enabled, std::string testName, float expectedOverdraw,
                    double warmupSeconds = 2.0, double runSeconds = 10.0);
 
-    bool EvaluateFrame(double frameTime, bool& /*isRunning*/);
+    bool EvaluateFrame(double frameTime);
 
     void RecordFrame(float ms, double overdrawFactor, int windowWidth, int windowHeight,
                      bool blendActive, bool depthActive, bool vsyncActive);
