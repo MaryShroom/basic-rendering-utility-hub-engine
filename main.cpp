@@ -31,14 +31,14 @@ int main() {
     int winW = 700, winH = 700;
 
     // Pixel size 35px = 0.1 NDC size
-    int spritePixelWH = 35; // For now, width and height sprite size is same, in px
+    int spritePixelWH = 17; // For now, width and height sprite size is same, in px
 
     if (!Init("BruhEngine - Stress Test", winW, winH)) {
         return -1;
     }
 
     // Particles counts
-    const int particleCount = 10000; // Switch to 2000 (5x), 4000 (10x) or 8000 (20x) as needed
+    const int particleCount = 41843; // Switch to 2000 (5x), 4000 (10x) or 8000 (20x) as needed
 
     int pixelWidth = winW, pixelHeight = winH;
     BruhEngine::GetDrawableSize(&pixelWidth, &pixelHeight);

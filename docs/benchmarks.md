@@ -66,6 +66,7 @@ Window 700x700, vsync off, depth off, 60 s after a 2 s warm-up, Release build, u
 Sprite size is given in pixels (35 px = 0.1 NDC at 700x700). Overdraw is the "Expected Overdraw" line of the report.
 Gpix/s here is the run-average figure. GPU load is N/A on this machine (radeon driver).
 Rows marked `898acb7-dirty` were built from 898acb7 with only `particleCount` and `spritePixelWH` edited (per the author; not checked against a diff).
+Rows marked `ef2068b-dirty` are assumed to differ from ef2068b only in those constants and the blend default (not checked against a diff).
 
 | Date | Commit | Test | Overdraw | Blend | Depth | Avg ms | Worst ms | FPS | Gpix/s (run-avg) | GPU load | CPU load | Temp | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -76,9 +77,44 @@ Rows marked `898acb7-dirty` were built from 898acb7 with only `particleCount` an
 | 2026-11-10 | 898acb7-dirty | 2k sprites, 35 px, blend off | ~4.9x | off | off | 3.12 | 6.46 | 320.0 | 0.765 | N/A | 21% | 73 C | 19,201 frames. Derived 0.831 (jitter-inflated). |
 | 2026-11-10 | 898acb7-dirty | 4k sprites, 35 px, blend off | ~9.7x | off | off | 4.58 | 16.29 | 218.2 | 1.041 | N/A | 23% | 75 C | 13,092 frames. Worst frame is a one-off hitch (3.6x the average); do not quote it. |
 | 2026-11-10 | 898acb7-dirty | 8k sprites, 35 px, blend off | ~19.5x | off | off | 7.33 | 10.91 | 136.4 | 1.305 | N/A | 16% | 77 C | 8,185 frames. |
-| 2026-11-10 | 898acb7-dirty | 10k sprites, 35 px, blend off | ~24.4x | off | off | 7.78 | 10.61 | 128.6 | 1.538 | N/A | 16% | 82 C | 7,715 frames. Only +0.45 ms over 8k, flatter than the earlier steps; rerun once to check. |
+| 2026-11-10 | 898acb7-dirty | 10k sprites, 35 px, blend off | ~24.4x | off | off | 7.78 | 10.61 | 128.6 | 1.538 | N/A | 16% | 82 C | 7,715 frames. Only +0.45 ms over 8k, flatter than the earlier steps. Rechecked (see Repeat runs): 10k 7.76 ms and 8k 6.96 ms, so most of the flatness was noise. |
 | 2026-11-10 | 898acb7 | 10k sprites, 64 px | ~79.8x | on | off | 34.37 | 40.80 | 29.1 | 1.138 | N/A | 13% | 73 C | 1,745 frames. Clean commit. Replaces the earlier dirty 64 px run (see 4.3). |
 | 2026-11-10 | not recorded | 10k sprites, 512 px | ~3,570x (analytic est.) | on | off | n/a | 1,281 (cut-off frame) | n/a | n/a | N/A | n/a | n/a | Aborted by the 100 ms cut-off before any frame was recorded, so no report. The single slow frame implies roughly 1.4 Gpix/s (rough; the clean 64 px run measured 1.14). Treat as "exceeds cut-off". |
+
+#### Size sweep (S1): 10k sprites, blend on, depth off
+
+Cooldown of 5 minutes between runs. The 35 px point is the S2-10000 blend-on row below (12.51 ms). The 512 px row further down is the other end of this sweep.
+
+| Date | Commit | Test | Overdraw | Blend | Depth | Avg ms | Worst ms | FPS | Gpix/s (run-avg) | GPU load | CPU load | Temp | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2026-11-10 | ef2068b-dirty | S1-64: 10k sprites, 64 px | ~79.8x | on | off | 34.20 | 40.82 | 29.2 | 1.144 | N/A | 8% | 72 C | 1,754 frames. Matches the clean 898acb7 run (34.37 ms). |
+| 2026-11-10 | ef2068b-dirty | S1-96: 10k sprites, 96 px | ~175.4x | on | off | 70.86 | 75.15 | 14.1 | 1.213 | N/A | 5% | 72 C | 846 frames. Predicted 70 to 80 ms. |
+
+#### Same-overdraw sweep (S2): about 24.4x, depth off
+
+Sprite count rises 17x while the overdraw stays the same. Cooldown of 2 minutes between runs. Draw calls = ceil(count / 10,000).
+
+| Date | Commit | Test | Overdraw | Blend | Depth | Avg ms | Worst ms | FPS | Gpix/s (run-avg) | GPU load | CPU load | Temp | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2026-11-10 | ef2068b-dirty | S2-2500: 2,500 sprites, 71 px | ~24.4x | on | off | 11.88 | 15.84 | 84.1 | 1.006 | N/A | 11% | 71 C | 5,048 frames. 1 draw call. |
+| 2026-11-10 | ef2068b-dirty | S2-5000: 5,000 sprites, 50 px | ~24.6x | on | off | 12.62 | 15.11 | 79.2 | 0.954 | N/A | 12% | 72 C | 4,753 frames. 1 draw call. |
+| 2026-11-10 | ef2068b-dirty | S2-10000: 10,000 sprites, 35 px | ~24.4x | on | off | 12.51 | 14.56 | 79.9 | 0.955 | N/A | 13% | 73 C | 4,794 frames. 1 draw call. Repeat of the 898acb7-dirty run (12.55 ms). |
+| 2026-11-10 | ef2068b-dirty | S2-19460: 19,460 sprites, 25 px | ~24.4x | on | off | 13.87 | 16.55 | 72.1 | 0.862 | N/A | 14% | 72 C | 4,325 frames. 2 draw calls. |
+| 2026-11-10 | ef2068b-dirty | S2-41843: 41,843 sprites, 17 px | ~24.4x | on | off | 15.59 | 17.27 | 64.1 | 0.767 | N/A | 18% | 73 C | 3,848 frames. 5 draw calls. |
+| 2026-11-10 | ef2068b-dirty | S2-2500: 2,500 sprites, 71 px, blend off | ~24.4x | off | off | 7.54 | 13.51 | 132.6 | 1.586 | N/A | 15% | 73 C | 7,957 frames. Derived 1.614 (jitter-inflated); worst frame 1.8x the average. |
+| 2026-11-10 | ef2068b-dirty | S2-5000: 5,000 sprites, 50 px, blend off | ~24.6x | off | off | 7.83 | 10.50 | 127.8 | 1.538 | N/A | 15% | 74 C | 7,666 frames. |
+| 2026-11-10 | ef2068b | S2-10000: 10,000 sprites, 35 px, blend off | ~24.4x | off | off | 7.76 | 10.58 | 128.9 | 1.542 | N/A | 18% | 77 C | 7,736 frames. Clean commit. |
+| 2026-11-10 | ef2068b-dirty | S2-19460: 19,460 sprites, 25 px, blend off | ~24.4x | off | off | 8.57 | 11.50 | 116.7 | 1.396 | N/A | 18% | 75 C | 7,004 frames. |
+| 2026-11-10 | ef2068b-dirty | S2-41843: 41,843 sprites, 17 px, blend off | ~24.4x | off | off | 9.13 | 11.41 | 109.6 | 1.309 | N/A | 26% | 75 C | 6,574 frames. |
+
+#### Repeat runs (reproducibility)
+
+Rechecks of the blend-off 8k and 10k runs after the flat 8k-to-10k step in the first set. 10k was run first, then 8k after a 5 minute cooldown.
+
+| Date | Commit | Test | Overdraw | Blend | Depth | Avg ms | Worst ms | FPS | Gpix/s (run-avg) | GPU load | CPU load | Temp | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2026-11-10 | ef2068b | 10k sprites, 35 px, blend off | ~24.4x | off | off | 7.76 | 10.44 | 128.9 | 1.541 | N/A | 17% | 76 C | 7,734 frames. First run: 7.78 ms. |
+| 2026-11-10 | ef2068b-dirty | 8k sprites, 35 px, blend off | ~19.5x | off | off | 6.96 | 9.80 | 143.7 | 1.374 | N/A | 16% | 73 C | 8,622 frames. First run: 7.33 ms (5% slower). |
 
 Early informal runs (before benchmark mode; window size, commit and CPU/GPU load not recorded):
 
@@ -134,16 +170,17 @@ Removed from the tables above. The frame times were real, but the rows were unus
 - [ ] Same on PC-B (the old PC-B rows are depth on and from older commits; rerun on the current commit)
 - [x] Same overdraw levels with blending off, including 10k (PC-A done)
 - [ ] Same on PC-B, including 10k with blend off (dropped run, no replacement)
-- [ ] Rerun the size sweep on the current commit with depth off (PC-B), then PC-A
+- [x] Size sweep with depth off on PC-A (10k sprites at 35, 64, 96 px, blend on)
+- [ ] Same size sweep with depth off on PC-B
 - [x] Rerun the PC-A 64 px run on a clean (non-dirty) commit (898acb7)
-- [ ] Rerun PC-A 8k and 10k blend-off once (the 8k to 10k step looks flat)
+- [x] Rerun PC-A 8k and 10k blend-off once (10k 7.76 ms, 8k 6.96 ms; the flat step was mostly noise)
 - [ ] Opaque sprites with depth testing, drawn front to back
 - [ ] Re-run baseline after: camera, culling, atlas, render passes
 - [ ] Run the same tests on PC-B
 - [ ] CPU-side stage timings (update, buffer fill, swap)
 - [ ] Optional: GPU timer queries
-- [ ] Sweep 1 (fixed count, varying size) on PC-B (done for depth on; redo with depth off), then PC-A
-- [ ] Sweep 2 (fixed overdraw, varying count) on PC-B, then PC-A
+- [ ] Sweep 1 (fixed count, varying size) on PC-B, redo with depth off (PC-A done in 4.1 with 35/64/96 px, not the 0.05/0.1/0.2 NDC design)
+- [ ] Sweep 2 (fixed overdraw, varying count) on PC-B (PC-A done: about 24.4x, 2,500 to 41,843 sprites, blend on and off)
 
 ### Test design: per-sprite cost vs per-pixel cost
 
@@ -207,17 +244,27 @@ far below what its GPU can fill), while PC-A is more likely to be pixel-bound.
   sprite count or window area and checking that frame time roughly halves.
 - PC-A blending cost: blend adds about 0.195 ms per 1x of overdraw at 700x700. At 2k sprites that is
   +0.96 ms (+31%); at 10k it is +4.77 ms (+61%). Frame time at 10k: 12.55 ms blend on, 7.78 ms blend off.
-- PC-A fill rate, two-point estimate: 10k sprites at 35 px (12.55 ms, 24.4x) against 64 px (34.37 ms, 79.8x)
-  gives about 0.39 ms per 1x of overdraw, roughly 1.24 Gpix/s with blending on. Extrapolating to zero
-  overdraw leaves about 3 ms per frame of non-pixel cost at 10k sprites.
-- The 35 px runs change sprite count and overdraw together, so they cannot separate per-sprite from per-pixel
-  cost on their own. Gpix/s rises with load (0.59 to 0.95 blend on); part of that is fixed per-frame cost,
+- PC-A fill rate (size sweep, 10k sprites, blend on, depth off): 35 / 64 / 96 px give 12.51 / 34.20 / 70.86 ms
+  at 24.4x / 79.8x / 175.4x overdraw. The slope is a steady 0.39 ms per 1x (about 1.25 to 1.28 Gpix/s) and
+  extrapolates to about 3 ms per frame of non-pixel cost. Run-average Gpix/s climbs toward that figure
+  (0.955, 1.144, 1.213) as the fixed cost is amortized. CPU load falls (13%, 8%, 5%) as the pixel load grows,
+  which is the evidence for GPU-bound without a GPU load counter. 128 px would be about 120 ms, over the cut-off.
+- Same-overdraw sweep (S2, about 24.4x): going from 2,500 to 41,843 sprites (17x) raises frame time only
+  31% with blend on (11.88 to 15.59 ms) and 21% with blend off (7.54 to 9.13 ms). Cost is mostly per pixel,
+  with a small per-sprite part of roughly 0.09 us per sprite blend on and 0.04 us blend off (mixes CPU and GPU cost).
+  CPU load rises with sprite count (11% to 18% blend on, 15% to 26% blend off).
+- Blend penalty at equal overdraw grows as sprites get smaller: about 0.18 ms per 1x at 71 px, 0.195 at 50 and
+  35 px, 0.22 at 25 px, 0.27 at 17 px. Possible cause: more partly covered pixel quads on small sprites
+  (hypothesis, not tested).
+- Gpix/s rises with load in the 35 px runs (0.59 to 0.95 blend on); that is mostly the fixed per-frame cost,
   and part may be the GPU clock rising under load (hypothesis, not checked).
-- Run-to-run spread on PC-A is about 5% (same 64 px config measured twice).
+- Run-to-run spread on PC-A is usually under 1%: 10k, 35 px, blend off measured 7.78, 7.76 and 7.76 ms;
+  blend on 12.55 and 12.51 ms; 64 px 34.37 and 34.20 ms. The outliers were the dirty 9bb71d0 64 px run
+  (+5%) and the first 8k blend-off run (+5%).
 - PC-B, depth on: frame time stays flat across a 25x to 160,000x nominal size sweep, so those runs do
   not measure fill rate (see the note under 4.2).
 - Practical budget: aim for roughly 5x-10x average overdraw in real scenes; measure the real ceiling with the planned runs.
-- PC-A temperature ranged 71 to 82 C across the 898acb7 runs (hottest: 10k sprites, blend off); 88 C was recorded in an earlier informal run. Keep stress runs short.
+- PC-A temperature ranged 71 to 82 C across the 898acb7 and ef2068b runs (hottest: 10k sprites, blend off, 82 C after a series of back-to-back runs; 76 to 77 C after a cooldown). Frame time did not change between 76 and 82 C, so there is no sign of throttling in that range. A run left going for about 30 minutes reached about 85 C; 88 C was recorded in an earlier informal run. Keep stress runs short.
 
 ## 7. How to reproduce
 
@@ -233,3 +280,4 @@ far below what its GPU can fill), while PC-A is more likely to be pixel-bound.
 - Change one variable at a time.
 - If frame time grows with sprite count but not with size: CPU-bound. If it grows with size and overdraw: GPU fill-rate-bound.
 - Stop a test as soon as frame time passes ~100 ms.
+- Close the window once "collection complete" appears. The engine keeps rendering at full load after the 60 s run, and the report only prints on close.
