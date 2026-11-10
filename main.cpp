@@ -60,31 +60,113 @@ int main(int argc, char* argv[]) {
     // Parse Command-Line Arguments
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
-        if (arg == "--window" && i + 2 < argc) {
-            winW = std::stoi(argv[++i]);
-            winH = std::stoi(argv[++i]);
-        } else if ((arg == "--count" || arg == "-c") && i + 1 < argc) {
-            particleCount = std::stoi(argv[++i]);
-        } else if ((arg == "--pixels" || arg == "-p") && i + 1 < argc) {
-            spritePixelWH = std::stoi(argv[++i]);
-        } else if ((arg == "--blend" || arg == "-b") && i + 1 < argc) {
-            blendEnabled = (std::stoi(argv[++i]) != 0);
-        } else if ((arg == "--depth" || arg == "-d") && i + 1 < argc) {
-            depthEnabled = (std::stoi(argv[++i]) != 0);
-        } else if ((arg == "--vsync" || arg == "-v") && i + 1 < argc) {
-            vsyncEnabled = (std::stoi(argv[++i]) != 0);
-        } else if (arg == "--telemetry" && i + 1 < argc) {
-            telemetryVisible = (std::stoi(argv[++i]) != 0);
-        } else if (arg == "--duration" && i + 1 < argc) {
-            benchmarkDuration = std::stod(argv[++i]);
-        } else if (arg == "--warmup" && i + 1 < argc) {
-            warmupTimer = std::stod(argv[++i]);
-        } else if (arg == "--benchmark" && i + 1 < argc) {
-            enableBenchmarkMode = (std::stoi(argv[++i]) != 0);
-        } else if (arg == "--help" || arg == "-h") {
+        try {
+            if (arg == "--window") {
+                if (i + 2 >= argc) {
+                    std::cerr << "Error: --window requires two arguments (width and height).\n";
+                    PrintHelp();
+                    return -1;
+                }
+                winW = std::stoi(argv[++i]);
+                winH = std::stoi(argv[++i]);
+            } else if (arg == "--count" || arg == "-c") {
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --count requires an integer argument.\n";
+                    PrintHelp();
+                    return -1;
+                }
+                particleCount = std::stoi(argv[++i]);
+            } else if (arg == "--pixels" || arg == "-p") {
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --pixels requires an integer argument.\n";
+                    PrintHelp();
+                    return -1;
+                }
+                spritePixelWH = std::stoi(argv[++i]);
+            } else if (arg == "--blend" || arg == "-b") {
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --blend requires a 0 or 1 argument.\n";
+                    PrintHelp();
+                    return -1;
+                }
+                blendEnabled = (std::stoi(argv[++i]) != 0);
+            } else if (arg == "--depth" || arg == "-d") {
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --depth requires a 0 or 1 argument.\n";
+                    PrintHelp();
+                    return -1;
+                }
+                depthEnabled = (std::stoi(argv[++i]) != 0);
+            } else if (arg == "--vsync" || arg == "-v") {
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --vsync requires a 0 or 1 argument.\n";
+                    PrintHelp();
+                    return -1;
+                }
+                vsyncEnabled = (std::stoi(argv[++i]) != 0);
+            } else if (arg == "--telemetry") {
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --telemetry requires a 0 or 1 argument.\n";
+                    PrintHelp();
+                    return -1;
+                }
+                telemetryVisible = (std::stoi(argv[++i]) != 0);
+            } else if (arg == "--duration") {
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --duration requires a numerical value.\n";
+                    PrintHelp();
+                    return -1;
+                }
+                benchmarkDuration = std::stod(argv[++i]);
+            } else if (arg == "--warmup") {
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --warmup requires a numerical value.\n";
+                    PrintHelp();
+                    return -1;
+                }
+                warmupTimer = std::stod(argv[++i]);
+            } else if (arg == "--benchmark") {
+                if (i + 1 >= argc) {
+                    std::cerr << "Error: --benchmark requires a 0 or 1 argument.\n";
+                    PrintHelp();
+                    return -1;
+                }
+                enableBenchmarkMode = (std::stoi(argv[++i]) != 0);
+            } else if (arg == "--help" || arg == "-h") {
+                PrintHelp();
+                return 0;
+            } else {
+                std::cerr << "Error: Unrecognized argument '" << arg << "'\n";
+                PrintHelp();
+                return -1;
+            }
+        } catch (const std::exception& e) {
+            std::cerr << "Error: Invalid value provided for '" << arg << "' (conversion failed: " << e.what() << ")\n";
             PrintHelp();
-            return 0;
+            return -1;
         }
+    }
+
+    // --- Range & Sanity Validation ---
+    if (particleCount < 0) {
+        std::cerr << "Error: Particle count cannot be negative (" << particleCount << ").\n";
+        return -1;
+    }
+    if (spritePixelWH <= 0) {
+        std::cerr << "Error: Sprite pixel size must be greater than 0 (" << spritePixelWH << ").\n";
+        return -1;
+    }
+    if (winW <= 0 || winH <= 0) {
+        std::cerr << "Error: Window dimensions must be greater than 0 (" << winW << "x" << winH << ").\n";
+        return -1;
+    }
+    if (benchmarkDuration <= 0.0) {
+        std::cerr << "Error: Benchmark duration must be greater than 0 (" << benchmarkDuration << "s).\n";
+        return -1;
+    }
+    if (warmupTimer < 0.0) {
+        std::cerr << "Error: Warmup timer cannot be negative (" << warmupTimer << "s).\n";
+        return -1;
     }
 
     if (!Init("BruhEngine - Stress Test", winW, winH)) {
