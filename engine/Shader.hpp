@@ -48,8 +48,8 @@ public:
         glUseProgram(0);
     }
 
-    void SetUniform1f(const std::string& name, float value) {
-        glUniform1f(glGetUniformLocation(m_RendererID, name.c_str()), value);
+    void SetUniform1i(const std::string& name, int value) {
+        glUniform1i(glGetUniformLocation(m_RendererID, name.c_str()), value);
     }
 
     void SetUniform2f(const std::string& name, float v0, float v1) {

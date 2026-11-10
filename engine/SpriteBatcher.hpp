@@ -164,7 +164,7 @@ public:
 
         m_ActiveTexture->Bind(0);
         m_ActiveShader->Bind();
-        m_ActiveShader->SetUniform1f("u_Texture", 0);
+        m_ActiveShader->SetUniform1i("u_Texture", 0);
 
         m_VertexArray->Bind();
         m_IndexBuffer->Bind();

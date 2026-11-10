@@ -5,7 +5,7 @@
 #include <algorithm>
 
 void BenchmarkRunner::Configure(bool enabled, std::string testName, float /*expectedOverdraw*/,
-                                double warmupSeconds = 2.0, double runSeconds = 10.0) {
+                                double warmupSeconds, double runSeconds) {
     m_Enabled = enabled;
     m_TestName = testName;
     m_FrameTimes.clear();

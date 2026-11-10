@@ -5,7 +5,7 @@
 
 namespace BruhEngine {
     bool Init(const char* title, int width, int height);
-    void Run(std::function<void(float fixedDeltaTime)> updateFunc, std::function<void()> renderFunc, double warmupGraceSeconds);
+    void Run(std::function<void(float fixedDeltaTime)> updateFunc, std::function<void()> renderFunc, double warmupGraceSeconds = 2.0);
     void SetWindowTitle(const std::string& title);
     void GetWindowSize(int* w, int* h);
     void GetDrawableSize(int* w, int* h);

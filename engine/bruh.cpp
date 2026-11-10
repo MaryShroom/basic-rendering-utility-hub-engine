@@ -39,7 +39,7 @@ namespace BruhEngine {
 
     static std::chrono::high_resolution_clock::time_point s_StartTime;
     static uint64_t s_TotalFrames = 0;
-    static std::vector<float> s_FrameTimes; // In milliseconds
+    // static std::vector<float> s_FrameTimes; // In milliseconds
 
     // Vertex and Fragment
     const char* vertexShaderSource = "#version 330 core\n"
@@ -171,7 +171,7 @@ namespace BruhEngine {
 
         s_StartTime = std::chrono::high_resolution_clock::now();
         s_TotalFrames = 0;
-        s_FrameTimes.clear();
+        // s_FrameTimes.clear();
 
         // --- Setup Dear ImGui context ---
         IMGUI_CHECKVERSION();
@@ -230,7 +230,7 @@ namespace BruhEngine {
         }
     }
 
-    void Run(std::function<void(float fixedDeltaTime)> updateFunc, std::function<void()> renderFunc, double warmupGraceSeconds = 2.0) {
+    void Run(std::function<void(float fixedDeltaTime)> updateFunc, std::function<void()> renderFunc, double warmupGraceSeconds) {
         const double targetFPS = 60.0;
         const double fixedDt = 1.0 / targetFPS;
 
@@ -269,7 +269,7 @@ namespace BruhEngine {
             }
 
             s_TotalFrames++;
-            s_FrameTimes.push_back((float)(frameTime * 1000.0));
+            // s_FrameTimes.push_back((float)(frameTime * 1000.0));
 
             // Reset draw call counter at the start of the frame draw phase
             s_DrawCalls = 0;

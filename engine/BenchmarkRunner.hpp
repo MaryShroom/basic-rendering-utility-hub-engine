@@ -8,9 +8,8 @@
 class BenchmarkRunner {
 public:
     void Configure(bool enabled, std::string testName, float /*expectedOverdraw*/,
-                   double warmupSeconds, double runSeconds);
+                   double warmupSeconds = 2.0, double runSeconds = 10.0);
 
-    // Returns false if the 100ms cut-off was triggered (signals loop termination)
     bool EvaluateFrame(double frameTime, bool& /*isRunning*/);
 
     void RecordFrame(float ms, double overdrawFactor, int windowWidth, int windowHeight,
@@ -32,7 +31,6 @@ private:
     std::vector<double> m_PixelCounts;
     std::vector<double> m_GpixSamples;
 
-    // Hardware and state samples for averaging
     std::vector<double> m_GPULoadSamples;
     std::vector<double> m_CPULoadSamples;
     std::vector<double> m_GPUTempSamples;
@@ -52,6 +50,5 @@ private:
     bool m_WarmupComplete = false;
     bool m_BenchmarkComplete = false;
 
-    // CPU delta state tracking
     HardwareSampler m_Sampler;
 };
