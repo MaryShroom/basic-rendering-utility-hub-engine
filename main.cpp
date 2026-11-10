@@ -184,7 +184,7 @@ int main() {
                 IsDepthEnabled(),
                 [](bool depth) { SetDepthEnabled(depth); }
             );
-        };
+        }
 
         EndBatch();
 

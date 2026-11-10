@@ -7,7 +7,7 @@
 
 class BenchmarkRunner {
 public:
-    void Configure(bool enabled, std::string testName, float /*expectedOverdraw*/,
+    void Configure(bool enabled, std::string testName, float expectedOverdraw,
                    double warmupSeconds = 2.0, double runSeconds = 10.0);
 
     bool EvaluateFrame(double frameTime, bool& /*isRunning*/);
@@ -26,6 +26,7 @@ private:
 
     bool m_Enabled = false;
     std::string m_TestName = "Default";
+    float m_ExpectedOverdraw = 0.0f;
     std::vector<float> m_FrameTimes;
     std::vector<double> m_OverdrawSamples;
     std::vector<double> m_PixelCounts;

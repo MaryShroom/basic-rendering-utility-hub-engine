@@ -4,10 +4,11 @@
 #include <numeric>
 #include <algorithm>
 
-void BenchmarkRunner::Configure(bool enabled, std::string testName, float /*expectedOverdraw*/,
+void BenchmarkRunner::Configure(bool enabled, std::string testName, float expectedOverdraw,
                                 double warmupSeconds, double runSeconds) {
     m_Enabled = enabled;
     m_TestName = testName;
+    m_ExpectedOverdraw = expectedOverdraw;
     m_FrameTimes.clear();
     m_OverdrawSamples.clear();
     m_PixelCounts.clear();
@@ -159,6 +160,7 @@ void BenchmarkRunner::FinalizeAndPrint() {
     std::cout << " Blend:                 " << blendCol << "\n";
     std::cout << " Depth Test:            " << depthCol << "\n";
     std::cout << " VSync:                 " << vsyncCol << "\n";
+    std::cout << " Expected Overdraw:     ~" << std::fixed << std::setprecision(1) << m_ExpectedOverdraw << "x\n";
     std::cout << " Avg Overdraw:          ~" << std::fixed << std::setprecision(1) << avgOverdraw << "x\n";
     std::cout << " Avg Frame Time:        " << std::setprecision(2) << avgMs << " ms\n";
     std::cout << " Worst Frame Time:      " << worstMs << " ms\n";
