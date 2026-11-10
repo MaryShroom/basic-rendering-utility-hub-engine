@@ -99,7 +99,7 @@ int main() {
         std::string testConfigName = std::to_string(particleCount) +
         " Sprites | 512px | Pivot(0.5,0.5) | Commit:" + std::string(COMMIT_HASH);
 
-        benchmark.Configure(true, testConfigName, overdrawFactor, warmupTimer, 10.0);
+        benchmark.Configure(true, testConfigName, overdrawFactor, warmupTimer, 60.0);
 
         BruhEngine::SetBlendEnabled(true); // Toggle blend for fill-rate testing
         SetDepthEnabled(false); // Depth Toggle

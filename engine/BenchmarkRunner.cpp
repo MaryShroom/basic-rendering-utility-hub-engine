@@ -39,7 +39,7 @@ bool BenchmarkRunner::EvaluateFrame(double frameTime, bool& /*isRunning*/) {
         m_CurrentWarmupTime += frameTime;
         if (m_CurrentWarmupTime >= m_WarmupDuration) {
             m_WarmupComplete = true;
-            std::cout << "[Benchmark] Warm-up complete. Starting active collection window...\n";
+            std::cout << "[Benchmark] Warm-up complete. Starting active collection window(" << std::to_string((int)m_RunLength) << " s)...\n";
         }
         return false; // Do not record during warm-up
     }
@@ -138,9 +138,15 @@ void BenchmarkRunner::FinalizeAndPrint() {
     std::string cpuLoadCol = m_CPULoadSamples.empty() ? "N/A" : std::to_string((int)avgCPULoad) + "%";
     std::string tempCol    = m_GPUTempSamples.empty() ? "N/A" : std::to_string((int)avgGPUTemp) + " C";
 
-    // Format duration values
-    std::string warmupCol  = std::to_string((int)m_WarmupDuration) + " s";
-    std::string runLenCol  = std::to_string((int)m_RunLength) + " s";
+    std::string benchmarkCol = std::to_string((int)m_RunLength) + " s";
+
+    // Format duration values and check for early abortion/cut-off
+    std::string warmupCol = std::to_string((int)m_WarmupDuration) + " s";
+
+    std::string runLenCol = std::to_string((int)m_CurrentRunTime) + " s";
+    if (m_CurrentRunTime < m_RunLength - 0.05) {
+        runLenCol += " (INCOMPLETE)";
+    }
 
     std::cout << "\n========================================================================================\n";
     std::cout << "                                BRUHENGINE BENCHMARK RESULT                             \n";
@@ -148,6 +154,7 @@ void BenchmarkRunner::FinalizeAndPrint() {
     std::cout << " Test Name:             " << m_TestName << "\n";
     std::cout << " Window Size:           " << windowCol << "\n";
     std::cout << " Warm-up Duration:      " << warmupCol << "\n";
+    std::cout << " Benchmark Duration:    " << benchmarkCol << "\n";
     std::cout << " Active Run Duration:   " << runLenCol << "\n";
     std::cout << " Blend:                 " << blendCol << "\n";
     std::cout << " Depth Test:            " << depthCol << "\n";
