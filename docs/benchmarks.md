@@ -163,6 +163,46 @@ These runs had depth test on and every sprite at the same depth, so early depth 
 discarded most of the covered pixels (hypothesis, not yet confirmed). Rerun the sweep with depth off
 on the current commit to measure real fill cost.
 
+#### PC-B, commit bc8bfb9 (2026-11-12): 21 runs from `run_multibenchmark.sh`
+
+All runs: 700x700, depth off, vsync off, 60 s after a 2 s warm-up, 2 minute cooldown between runs, clean commit.
+GPU load is real on this machine (`amdgpu`). Window size, flags and commit are the same for all rows.
+
+**GPU-bound runs (usable).** GPU load is 83% or higher, so the GPU sets the frame time.
+
+| Date | Commit | Test | Overdraw | Blend | Depth | Avg ms | Worst ms | FPS | Gpix/s (run-avg) | GPU load | CPU load | Temp | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2026-11-12 | bc8bfb9 | S1-64: 10k sprites, 64 px | ~79.8x | on | off | 0.47 | 1.66 | 2105.5 | 82.379 | 96% | 9% | 76 C | 126,331 frames. GPU load 96%: GPU is the bottleneck. |
+| 2026-11-12 | bc8bfb9 | S1-128: 10k sprites, 128 px | ~304.3x | on | off | 1.84 | 3.82 | 543.6 | 81.065 | 83% | 9% | 76 C | 32,616 frames. GPU load 83%: GPU is the bottleneck. |
+| 2026-11-12 | bc8bfb9 | S2-2500: 2,500 sprites, 71 px, blend off | ~24.4x | off | off | 0.17 | 1.99 | 5727.6 | 68.512 | 85% | 11% | 76 C | 343,651 frames. GPU load 85%: GPU is the bottleneck. Per-frame overhead is a large share at this frame time, so not a pure fill figure. |
+
+**Unstable runs (do not compare).** The same config gave frame times 3.8x apart (10k sprites, 35 px: 0.46 ms in
+two runs and 1.74 to 1.75 ms in two others, once with blend on and once with blend off for each), with the GPU mostly idle in the slow runs. "Fast mode" is about
+0.04 to 0.07 us per sprite and "slow mode" about 0.17 to 0.2 us per sprite. The slow runs also have a derived
+throughput 1.5 to 1.8 times their run-average, so frame times swing inside the run. Blend on versus off, sprite
+count and sprite size effects cannot be read from these rows until the cause is found.
+
+| Date | Commit | Test | Overdraw | Blend | Depth | Avg ms | Worst ms | FPS | Gpix/s (run-avg) | GPU load | CPU load | Temp | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2026-11-12 | bc8bfb9 | 2k sprites, 35 px | ~4.9x | on | off | 0.36 | 1.96 | 2741.4 | 6.551 | 34% | 15% | 60 C | 164,486 frames. Slow mode (0.18 us/sprite); derived is 1.5x run-avg. |
+| 2026-11-12 | bc8bfb9 | 4k sprites, 35 px | ~9.7x | on | off | 0.63 | 2.00 | 1577.9 | 7.531 | 33% | 15% | 60 C | 94,676 frames. Slow mode (0.16 us/sprite); derived is 1.7x run-avg. |
+| 2026-11-12 | bc8bfb9 | 8k sprites, 35 px | ~19.5x | on | off | 1.42 | 2.55 | 706.6 | 6.757 | 25% | 17% | 60 C | 42,394 frames. Slow mode (0.18 us/sprite); derived is 1.7x run-avg. |
+| 2026-11-12 | bc8bfb9 | 10k sprites, 35 px | ~24.4x | on | off | 0.46 | 1.82 | 2197.1 | 26.269 | 59% | 11% | 63 C | 131,828 frames. Fast mode (0.05 us/sprite); derived is 1.0x run-avg. Same config as the S2-10000 blend-on row (3.8x apart). |
+| 2026-11-12 | bc8bfb9 | 2k sprites, 35 px, blend off | ~4.9x | off | off | 0.36 | 1.95 | 2783.1 | 6.651 | 35% | 14% | 61 C | 166,983 frames. Slow mode (0.18 us/sprite); derived is 1.5x run-avg. |
+| 2026-11-12 | bc8bfb9 | 4k sprites, 35 px, blend off | ~9.7x | off | off | 1.02 | 2.06 | 981.8 | 4.686 | 24% | 16% | 60 C | 58,905 frames. Slow mode (0.26 us/sprite); derived is 1.0x run-avg. |
+| 2026-11-12 | bc8bfb9 | 8k sprites, 35 px, blend off | ~19.5x | off | off | 0.94 | 2.54 | 1058.6 | 10.123 | 34% | 14% | 61 C | 63,518 frames. Mixed mode (0.12 us/sprite); derived is 1.8x run-avg. |
+| 2026-11-12 | bc8bfb9 | 10k sprites, 35 px, blend off | ~24.4x | off | off | 1.74 | 2.83 | 573.6 | 6.858 | 24% | 17% | 60 C | 34,415 frames. Slow mode (0.17 us/sprite); derived is 1.8x run-avg. Same config as the S2-10000 blend-off row (3.8x apart). |
+| 2026-11-12 | bc8bfb9 | S1-96: 10k sprites, 96 px | ~175.4x | on | off | 1.98 | 3.38 | 505.0 | 43.403 | 59% | 14% | 61 C | 30,297 frames. Slow mode (0.20 us/sprite); derived is 1.1x run-avg. GPU needed about 1.1 ms per frame but the frame took 1.98 ms. |
+| 2026-11-12 | bc8bfb9 | S2-2500: 2,500 sprites, 71 px | ~24.4x | on | off | 0.56 | 2.47 | 1792.8 | 21.445 | 59% | 13% | 56 C | 107,567 frames. Slow mode (0.22 us/sprite); derived is 1.2x run-avg. |
+| 2026-11-12 | bc8bfb9 | S2-5000: 5,000 sprites, 50 px | ~24.6x | on | off | 0.97 | 3.24 | 1032.9 | 12.434 | 42% | 15% | 59 C | 61,972 frames. Slow mode (0.19 us/sprite); derived is 1.4x run-avg. |
+| 2026-11-12 | bc8bfb9 | S2-10000: 10,000 sprites, 35 px | ~24.4x | on | off | 1.75 | 3.13 | 572.0 | 6.838 | 24% | 17% | 60 C | 34,318 frames. Slow mode (0.17 us/sprite); derived is 1.8x run-avg. Same config as the 10k, 35 px blend-on row (3.8x apart). |
+| 2026-11-12 | bc8bfb9 | S2-19460: 19,460 sprites, 25 px | ~24.4x | on | off | 1.98 | 3.63 | 504.2 | 6.027 | 35% | 15% | 60 C | 30,249 frames. Mixed mode (0.10 us/sprite); derived is 1.3x run-avg. |
+| 2026-11-12 | bc8bfb9 | S2-41843: 41,843 sprites, 17 px | ~24.4x | on | off | 3.59 | 6.01 | 278.7 | 3.330 | 16% | 14% | 60 C | 16,721 frames. Mixed mode (0.09 us/sprite); derived is 1.1x run-avg. |
+| 2026-11-12 | bc8bfb9 | S2-5000: 5,000 sprites, 50 px, blend off | ~24.6x | off | off | 0.27 | 1.34 | 3740.6 | 45.030 | 59% | 11% | 71 C | 224,433 frames. Fast mode (0.05 us/sprite); derived is 1.0x run-avg. |
+| 2026-11-12 | bc8bfb9 | S2-10000: 10,000 sprites, 35 px, blend off | ~24.4x | off | off | 0.46 | 1.98 | 2179.6 | 26.060 | 59% | 11% | 62 C | 130,777 frames. Fast mode (0.05 us/sprite); derived is 1.0x run-avg. Same config as the 10k, 35 px blend-off row (3.8x apart). |
+| 2026-11-12 | bc8bfb9 | S2-19460: 19,460 sprites, 25 px, blend off | ~24.4x | off | off | 1.42 | 3.11 | 706.4 | 8.445 | 48% | 14% | 62 C | 42,383 frames. Fast mode (0.07 us/sprite); derived is 1.3x run-avg. |
+| 2026-11-12 | bc8bfb9 | S2-41843: 41,843 sprites, 17 px, blend off | ~24.4x | off | off | 1.65 | 3.76 | 606.0 | 7.241 | 32% | 10% | 62 C | 36,357 frames. Fast mode (0.04 us/sprite); derived is 1.0x run-avg. |
+
 ### 4.3 Dropped runs
 
 Removed from the tables above. The frame times were real, but the rows were unusable or have been superseded.
@@ -176,12 +216,12 @@ Removed from the tables above. The frame times were real, but the rows were unus
 ## 5. Planned runs
 
 - [x] Overdraw 5x, 10x, 20x, 25x with blending on, 35 px, depth off (PC-A done)
-- [ ] Same on PC-B (the old PC-B rows are depth on and from older commits; rerun on the current commit)
+- [ ] Same on PC-B (bc8bfb9 run done on 2026-11-12 but unstable, see 4.2; repeat once the cause is understood)
 - [x] Same overdraw levels with blending off, including 10k (PC-A done)
-- [ ] Same on PC-B, including 10k with blend off (dropped run, no replacement)
+- [ ] Same on PC-B, including 10k with blend off (bc8bfb9 run done but unstable, see 4.2)
 - [x] Size sweep with depth off on PC-A (10k sprites at 35, 64, 96 px, blend on)
 - [x] Blend-off repeat of the size sweep at 64 and 96 px on PC-A
-- [ ] Same size sweep with depth off on PC-B
+- [ ] Same size sweep with depth off on PC-B (bc8bfb9: 64 and 128 px usable, 96 px unstable)
 - [x] Rerun the PC-A 64 px run on a clean (non-dirty) commit (898acb7)
 - [x] Rerun PC-A 8k and 10k blend-off once (10k 7.76 ms, 8k 6.96 ms; the flat step was mostly noise)
 - [ ] Opaque sprites with depth testing, drawn front to back
@@ -190,7 +230,9 @@ Removed from the tables above. The frame times were real, but the rows were unus
 - [ ] CPU-side stage timings (update, buffer fill, swap)
 - [ ] Optional: GPU timer queries
 - [ ] Sweep 1 (fixed count, varying size) on PC-B, redo with depth off (PC-A done in 4.1 with 35/64/96 px, not the 0.05/0.1/0.2 NDC design)
-- [ ] Sweep 2 (fixed overdraw, varying count) on PC-B (PC-A done: about 24.4x, 2,500 to 41,843 sprites, blend on and off)
+- [ ] Sweep 2 (fixed overdraw, varying count) on PC-B (PC-A done: about 24.4x, 2,500 to 41,843 sprites, blend on and off; PC-B run on bc8bfb9 is unstable, see 4.2)
+- [ ] Investigate the PC-B fast/slow frame-time modes: repeat 10k sprites, 35 px, blend on five times, then change one thing at a time (`mesa_glthread=false`, `vblank_mode=0`, CPU governor, compositor or full-screen window, pinning with `taskset`)
+- [ ] Add p50, p95 and p99 frame times to the report so mixed fast and slow frames show up
 
 ### Test design: per-sprite cost vs per-pixel cost
 
@@ -275,6 +317,13 @@ far below what its GPU can fill), while PC-A is more likely to be pixel-bound.
   9 GB/s and blend on (read plus write) moves about 10 GB/s, nearly the same. That fits a fill rate limited by
   memory bandwidth or ROPs. Confirming it needs this board's memory type, bus width and memory clock, which
   vary between HD 5450 models.
+- PC-B (bc8bfb9): the GPU-bound runs give about 82.4 Gpix/s (64 px, blend on, GPU load 96%) and 81.1 Gpix/s
+  (128 px, blend on, 83%), roughly two thirds of the 121.9 Gpix/s theoretical figure and below the roughly 100 Gpix/s
+  seen earlier at 512 px (smaller sprites are probably less efficient; not tested).
+- PC-B (bc8bfb9): low-overdraw runs are not repeatable. The same config (10k sprites, 35 px) measured 0.46 and
+  1.75 ms with blend on, and 1.74 and 0.46 ms with blend off. In the slow runs the GPU sits at about 24% load. Possible
+  causes (none checked): present path or compositor blocking, CPU governor, Mesa threaded GL dispatch, GPU or
+  PCIe power state. Treat all PC-B rows marked unstable as noise until a repeat shows otherwise.
 - Gpix/s rises with load in the 35 px runs (0.59 to 0.95 blend on); that is mostly the fixed per-frame cost,
   and part may be the GPU clock rising under load (hypothesis, not checked).
 - Run-to-run spread on PC-A is usually under 1%: 10k, 35 px, blend off measured 7.78, 7.76 and 7.76 ms;
