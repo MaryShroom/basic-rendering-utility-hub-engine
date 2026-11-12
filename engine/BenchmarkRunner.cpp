@@ -168,3 +168,8 @@ void BenchmarkRunner::FinalizeAndPrint() {
     std::cout << " Total Frames Logged:   " << m_FrameTimes.size() << "\n";
     std::cout << "========================================================================================\n\n";
 }
+
+bool BenchmarkRunner::IsIncomplete() const {
+    if (!m_Enabled) return false;
+    return m_CurrentRunTime < m_RunLength - 0.05;
+}

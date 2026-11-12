@@ -444,7 +444,13 @@ int main(int argc, char* argv[]) {
 
     benchmark.FinalizeAndPrint();
 
+    // --- Determine Exit Code ---
+    int exitCode = 0;
+    if (enableBenchmarkMode && benchmark.IsIncomplete()) {
+        exitCode = 2; // Non-zero exit code for incomplete/cut-off runs
+    }
+
     telemetry.Shutdown();
     Shutdown();
-    return 0;
+    return exitCode;
 }

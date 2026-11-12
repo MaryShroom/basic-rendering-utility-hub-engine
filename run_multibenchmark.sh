@@ -16,7 +16,7 @@ for dir in "${POSSIBLE_DIRS[@]}"; do
     fi
 done
 # If not found in build directories, check in script's root directory
-if [[ -z "$PROG_PATH" && -x "$SCRIPT_DIR/$EXE_NAME" ]]; then
+if [[ -z "$PROG_PATH" && -x "$SCRIPT_DIR/$PROG_NAME" ]]; then
     PROG_PATH="$SCRIPT_DIR/$PROG_NAME"
 fi
 # Safety Check
@@ -116,19 +116,38 @@ for entry in "${benchmarks[@]}"; do
     "$PROG_PATH" "${flag_array[@]}" >> "$log_path" 2>&1 &
     PROG_ID=$!
 
-    echo "=========================================="
+    echo "==============================================="
     echo "Run Count: $count/$total"
     echo "Running:   $name"
-    echo "=========================================="
+    echo "==============================================="
 
+    # Capture exit code safely without triggering set -e early
+    set +e
     wait "$PROG_ID"
+    exit_code=$?
+    set -e
     PROG_ID="" # Reset PID
 
-    echo "Run '$name' completed."
+    # Handle exit codes
+    if [[ "$exit_code" -eq 255 ]]; then
+        echo "Error: Argument error detected (exit 255) for '$name'. Aborting batch..." >&2
+        printf "RUN FAILED (exit 255)\n\n" >> "$log_path"
+        printf "\n%s\n\n" "======================END======================" >> "$log_path"
+        exit 255
+    elif [[ "$exit_code" -eq 2 ]]; then
+        echo "Warning: Run '$name' was INCOMPLETE (hitch cut-off / exit code 2). Skipping and continuing..."
+        printf "RUN FAILED (exit 2 - INCOMPLETE)\n\n" >> "$log_path"
+    elif [[ "$exit_code" -ne 0 ]]; then
+        echo "Warning: Run '$name' failed with exit code $exit_code (e.g. hitch cut-off or crash). Logging and continuing..."
+        printf "RUN FAILED (exit %d)\n\n" "$exit_code" >> "$log_path"
+    else
+        echo "Run '$name' completed successfully."
+    fi
+
     echo "Benchmark log saved @ '$log_path'."
 
     # Append the border
-    printf "\n%s\n\n" "==========================================end" >> "$log_path"
+    printf "\n%s\n\n" "======================END======================" >> "$log_path"
 
     # Sleep if not the last run
     if [[ "$count" -lt "$total" ]]; then
