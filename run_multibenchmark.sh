@@ -112,7 +112,7 @@ for entry in "${benchmarks[@]}"; do
     # --- Extract duration and warmup to dynamically compute a safe timeout ---
     run_duration=60
     run_warmup=2
-    set -- "$raw_flags"
+    prev_arg=""
     for arg in $raw_flags; do
         if [[ "${prev_arg:-}" == "--duration" ]]; then run_duration="$arg"; fi
         if [[ "${prev_arg:-}" == "--warmup" ]]; then run_warmup="$arg"; fi
@@ -134,7 +134,7 @@ for entry in "${benchmarks[@]}"; do
     set +e
 
     # Run the benchmark in background under timeout and catch its PID
-    timeout "${timeout_sec}s" "$PROG_PATH" "${flag_array[@]}" >> "$log_path" 2>&1 &
+    timeout -k 10s "${timeout_sec}s" "$PROG_PATH" "${flag_array[@]}" >> "$log_path" 2>&1 &
     PROG_ID=$!
 
     wait "$PROG_ID"
