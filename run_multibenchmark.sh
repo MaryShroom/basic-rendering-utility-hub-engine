@@ -109,20 +109,34 @@ for entry in "${benchmarks[@]}"; do
     # Convert flags into an array
     read -ra flag_array <<< "$raw_flags"
 
+    # --- Extract duration and warmup to dynamically compute a safe timeout ---
+    run_duration=60
+    run_warmup=2
+    set -- "$raw_flags"
+    for arg in $raw_flags; do
+        if [[ "${prev_arg:-}" == "--duration" ]]; then run_duration="$arg"; fi
+        if [[ "${prev_arg:-}" == "--warmup" ]]; then run_warmup="$arg"; fi
+        prev_arg="$arg"
+    done
+    # Timeout = Duration + Warmup + 30s buffer grace period
+    timeout_sec=$(awk "BEGIN {print int($run_duration + $run_warmup + 30)}")
+
     # Append the run note first
     printf "Run: %s\n\n" "$name" >> "$log_path"
-
-    # Run the benchmark in background and catch its PID
-    "$PROG_PATH" "${flag_array[@]}" >> "$log_path" 2>&1 &
-    PROG_ID=$!
 
     echo "==============================================="
     echo "Run Count: $count/$total"
     echo "Running:   $name"
+    echo "Timeout:   ${timeout_sec}s"
     echo "==============================================="
 
     # Capture exit code safely without triggering set -e early
     set +e
+
+    # Run the benchmark in background under timeout and catch its PID
+    timeout "${timeout_sec}s" "$PROG_PATH" "${flag_array[@]}" >> "$log_path" 2>&1 &
+    PROG_ID=$!
+
     wait "$PROG_ID"
     exit_code=$?
     set -e
@@ -134,6 +148,9 @@ for entry in "${benchmarks[@]}"; do
         printf "RUN FAILED (exit 255)\n\n" >> "$log_path"
         printf "\n%s\n\n" "======================END======================" >> "$log_path"
         exit 255
+    elif [[ "$exit_code" -eq 124 ]]; then
+        echo "Error: Run '$name' timed out after ${timeout_sec}s (hang / frozen window detected). Skipping..."
+        printf "RUN FAILED (exit 124 - TIMEOUT / HANG)\n\n" >> "$log_path"
     elif [[ "$exit_code" -eq 2 ]]; then
         echo "Warning: Run '$name' was INCOMPLETE (hitch cut-off / exit code 2). Skipping and continuing..."
         printf "RUN FAILED (exit 2 - INCOMPLETE)\n\n" >> "$log_path"
