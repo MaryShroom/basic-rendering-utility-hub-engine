@@ -382,9 +382,11 @@ int main(int argc, char* argv[]) {
         } else if (wasRecording && !benchmarkFinished && enableBenchmarkMode) {
             benchmarkFinished = true;
             if (autoExitEnabled) {
-                SDL_Event quitEvent;
+                SDL_Event quitEvent{};
                 quitEvent.type = SDL_QUIT;
-                SDL_PushEvent(&quitEvent);
+                if (SDL_PushEvent(&quitEvent) <= 0) {
+                    std::cerr << "Warning: Failed to push SDL_QUIT event for autoexit: " << SDL_GetError() << "\n";
+                }
             }
         }
 
