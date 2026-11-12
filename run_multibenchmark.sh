@@ -21,7 +21,7 @@ if [[ -z "$PROG_PATH" && -x "$SCRIPT_DIR/$EXE_NAME" ]]; then
 fi
 # Safety Check
 if [[ -z "$PROG_PATH" ]]; then
-    echo "❌ Error: Could not find '$PROG_NAME' in any standard build directory." >&2
+    echo "Error: Could not find '$PROG_NAME' in any standard build directory." >&2
     echo "Please ensure the program is compiled and named correctly." >&2
     exit 1
 fi
@@ -56,7 +56,7 @@ trap cleanup EXIT SIGINT SIGTERM SIGHUP
 
 # --- Benchmark Flags ---
 # Default Flags across all runs, no changes.
-COMMON_FLAGS="--window 700 700 --vsync 0 --telemetry 0 --autoexit 1 --duration 2 --warmup 2 --benchmark 1"
+COMMON_FLAGS="--window 700 700 --vsync 0 --telemetry 0 --autoexit 1 --duration 60 --warmup 2 --benchmark 1"
 # List of benchmarks setup.
 benchmarks=(
   "Overdraw 5x, Blend On, Depth Off|$COMMON_FLAGS --count 2000 --pixels 35 --blend 1 --depth 0"
@@ -68,13 +68,34 @@ benchmarks=(
   "Overdraw 10x, Blend Off, Depth Off|$COMMON_FLAGS --count 4000 --pixels 35 --blend 0 --depth 0"
   "Overdraw 20x, Blend Off, Depth Off|$COMMON_FLAGS --count 8000 --pixels 35 --blend 0 --depth 0"
   "Overdraw 25x, Blend Off, Depth Off|$COMMON_FLAGS --count 10000 --pixels 35 --blend 0 --depth 0"
+
+  "Fixed count, varying size, Depth off, Blend On, 64px|$COMMON_FLAGS --count 10000 --pixels 64 --blend 1 --depth 0"
+  "Fixed count, varying size, Depth off, Blend On, 96px|$COMMON_FLAGS --count 10000 --pixels 96 --blend 1 --depth 0"
+  "Fixed count, varying size, Depth off, Blend On, 128px|$COMMON_FLAGS --count 10000 --pixels 128 --blend 1 --depth 0"
+
+  "Fixed overdraw, varying count, Depth off, Blend On, 71px, 2500 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 2500 --pixels 71 --blend 1 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend On, 50px, 5000 sprites, ~24.6x Overdraw|$COMMON_FLAGS --count 5000 --pixels 50 --blend 1 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend On, 35px, 10000 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 10000 --pixels 35 --blend 1 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend On, 25px, 19460 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 19460 --pixels 25 --blend 1 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend On, 17px, 41843 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 41843 --pixels 17 --blend 1 --depth 0"
+
+  "Fixed overdraw, varying count, Depth off, Blend Off, 71px, 2500 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 2500 --pixels 71 --blend 0 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend Off, 50px, 5000 sprites, ~24.6x Overdraw|$COMMON_FLAGS --count 5000 --pixels 50 --blend 0 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend Off, 35px, 10000 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 10000 --pixels 35 --blend 0 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend Off, 25px, 19460 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 19460 --pixels 25 --blend 0 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend Off, 17px, 41843 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 41843 --pixels 17 --blend 0 --depth 0"
 )
 
 # --- Cooldown Per Run in second ---
-cooldown=5 # 120 seconds = 2 minutes
+cooldown=120 # 120 seconds = 2 minutes
 
 RUN_PATH="$SCRIPT_DIR/runs"
 mkdir -p "$RUN_PATH"
+
+# Timestamp
+timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
+log_path="$RUN_PATH/run_${timestamp}.log"
+
 # --- Run Benchmarks ---
 total=${#benchmarks[@]}
 count=0
@@ -85,16 +106,11 @@ for entry in "${benchmarks[@]}"; do
     # Split entry at '|' into 'name' and 'raw_flags'
     IFS='|' read -r name raw_flags <<< "$entry"
 
-    # Timestamp
-    timestamp=$(date +"%Y-%m-%d_%H-%M-%S")
-    # Log path per run
-    log_path="$RUN_PATH/run_${count}_${timestamp}.log"
-
     # Convert flags into an array
     read -ra flag_array <<< "$raw_flags"
 
     # Append the run note first
-    printf "Run: %s\n\n" "$name" > "$log_path"
+    printf "Run: %s\n\n" "$name" >> "$log_path"
 
     # Run the benchmark in background and catch its PID
     "$PROG_PATH" "${flag_array[@]}" >> "$log_path" 2>&1 &
@@ -110,6 +126,9 @@ for entry in "${benchmarks[@]}"; do
 
     echo "Run '$name' completed."
     echo "Benchmark log saved @ '$log_path'."
+
+    # Append the border
+    printf "\n%s\n\n" "==========================================end" >> "$log_path"
 
     # Sleep if not the last run
     if [[ "$count" -lt "$total" ]]; then
