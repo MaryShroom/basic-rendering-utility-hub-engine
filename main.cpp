@@ -1,6 +1,7 @@
 #include "engine/bruh.hpp"
 #include "engine/TelemetryMonitor.hpp"
 #include "engine/BenchmarkRunner.hpp"
+#include "engine/OrthographicCamera.hpp"
 
 #if __has_include("GeneratedGitVersion.hpp")
 #include "GeneratedGitVersion.hpp"
@@ -21,6 +22,12 @@
 #endif
 
 using namespace BruhEngine;
+
+namespace BruhEngine {
+    OrthographicCamera camera;
+    int winW = 700;
+    int winH = 700;
+}
 
 void PrintHelp() {
     std::cout << "BruhEngine Benchmark Suite\n"
@@ -87,7 +94,8 @@ struct Particle {
 
 int main(int argc, char* argv[]) {
     // Default Configuration Value
-    int winW = 700, winH = 700;
+    winW = 700;
+    winH = 700;
     int particleCount = 10000;       // 2000 (5x), 4000 (10x) or 8000 (20x)
     int spritePixelWH = 35;          // Pixel size 35px = 0.1 NDC size | For now, width and height sprite size is same, in px
     bool enableBenchmarkMode = true; // Benchmark and Telemetry Opt-In
@@ -274,16 +282,16 @@ int main(int argc, char* argv[]) {
     BruhEngine::GetDrawableSize(&pixelWidth, &pixelHeight);
 
     // Particles size (converted pixel target into proper NDC scale)
-    float spriteWidth = (float)spritePixelWH / (float)pixelWidth * 2.0f;
-    float spriteHeight = (float)spritePixelWH / (float)pixelHeight * 2.0f;
+    float spriteWidth = (float)spritePixelWH;
+    float spriteHeight = (float)spritePixelWH;
 
     // Initialize however many moving particles
     std::vector<Particle> particles(particleCount);
     for (int i = 0; i < particleCount; ++i) {
-        particles[i].x = ((float)(rand() % 2000) / 1000.0f) - 1.0f; // Random X (-1.0 to 1.0)
-        particles[i].y = ((float)(rand() % 2000) / 1000.0f) - 1.0f; // Random Y (-1.0 to 1.0)
-        particles[i].vx = ((float)(rand() % 100) - 50.0f) / 300.0f;  // Velocity X
-        particles[i].vy = ((float)(rand() % 100) - 50.0f) / 300.0f;  // Velocity Y
+        particles[i].x = ((float)(rand() % 70000) / 100.0f) - 350.0f;
+        particles[i].y = ((float)(rand() % 70000) / 100.0f) - 350.0f;
+        particles[i].vx = ((float)(rand() % 200) - 100.0f);  // Velocity X
+        particles[i].vy = ((float)(rand() % 200) - 100.0f);  // Velocity Y
 
         particles[i].color[0] = (float)(rand() % 100) / 100.0f;     // R tint
         particles[i].color[1] = (float)(rand() % 100) / 100.0f;     // G tint
@@ -338,14 +346,26 @@ int main(int argc, char* argv[]) {
 
     // Register event listener to toggle VSync on pressing 'V'
     SetEventCallback([&telemetry](const SDL_Event& e) {
-        if (e.type == SDL_KEYDOWN) {
-            if (e.key.keysym.sym == SDLK_v) {
-                SetVSync(!IsVSyncEnabled());
-            } else if (e.key.keysym.sym == SDLK_h) {
-                telemetry.ToggleVisible();
-            } else if (e.key.keysym.sym == SDLK_d) {
-                SetDepthEnabled(!IsDepthEnabled());
+        // Zoom with scroll wheel
+        if (e.type == SDL_MOUSEWHEEL) {
+            if (e.wheel.y > 0) {
+                camera.zoom *= 1.1f; // Zoom in
+            } else if (e.wheel.y < 0) {
+                camera.zoom /= 1.1f; // Zoom out
             }
+            // Clamp zoom to safe ranges
+            camera.zoom = std::clamp(camera.zoom, 0.1f, 20.0f);
+        }
+
+        if (e.type == SDL_KEYDOWN) {
+            float panSpeed = 20.0f / camera.zoom;
+            if (e.key.keysym.sym == SDLK_LEFT)  camera.posX -= panSpeed;
+            if (e.key.keysym.sym == SDLK_RIGHT) camera.posX += panSpeed;
+            if (e.key.keysym.sym == SDLK_UP)    camera.posY += panSpeed;
+            if (e.key.keysym.sym == SDLK_DOWN)  camera.posY -= panSpeed;
+            if (e.key.keysym.sym == SDLK_v)     SetVSync(!IsVSyncEnabled());
+            if (e.key.keysym.sym == SDLK_h)     telemetry.ToggleVisible();
+            if (e.key.keysym.sym == SDLK_d)     SetDepthEnabled(!IsDepthEnabled());
         }
     });
 
@@ -355,9 +375,9 @@ int main(int argc, char* argv[]) {
             p.x += p.vx * fixedDt;
             p.y += p.vy * fixedDt;
 
-            // Screen boundary bounce (NDC range roughly -0.95 to 0.95)
-            if (p.x < -0.95f || p.x > 0.95f) p.vx = -p.vx;
-            if (p.y < -0.95f || p.y > 0.95f) p.vy = -p.vy;
+            // Screen boundary bounce within world limits
+            if (p.x < -330.0f || p.x > 330.0f) p.vx = -p.vx;
+            if (p.y < -330.0f || p.y > 330.0f) p.vy = -p.vy;
         }
     };
 
@@ -365,6 +385,8 @@ int main(int argc, char* argv[]) {
     Uint64 lastCounter = SDL_GetPerformanceCounter();
     bool wasRecording = false;
     bool benchmarkFinished = false;
+
+    camera.GetMatrix((float)winW, (float)winH);
 
     // Custom render logic: what to draw each frame
     auto renderLogic = [&]() {

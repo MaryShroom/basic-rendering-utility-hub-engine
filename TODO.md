@@ -20,7 +20,7 @@ Target hardware: i5-2320, Radeon HD 5450 (Cedar), 6 GB RAM.
 
 ## Next up (in order)
 
-- [ ] 1. Orthographic camera: world units, pan and zoom, correct aspect ratio, viewport update on resize
+- [x] 1. Orthographic camera: world units, pan and zoom, correct aspect ratio, viewport update on resize
 - [ ] 2. Culling: skip sprites outside the camera view
 - [ ] 3. Texture atlas and sprite sheets (add padding to avoid edge bleeding)
 - [ ] 4. Input layer: actions instead of raw keys, Escape to quit, gamepad support

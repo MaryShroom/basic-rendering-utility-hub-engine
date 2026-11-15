@@ -5,6 +5,7 @@
 #include "Texture.hpp"
 #include "IndexBuffer.hpp"
 #include "SpriteBatcher.hpp"
+#include "OrthographicCamera.hpp"
 
 #include "imgui.h"
 #include "imgui_impl_sdl2.h"
@@ -37,6 +38,9 @@ namespace BruhEngine {
     static Texture* texture = nullptr;
     static SpriteBatcher* batcher = nullptr;
 
+    extern OrthographicCamera camera;
+    extern int winW, winH;
+
     static std::chrono::high_resolution_clock::time_point s_StartTime;
     static uint64_t s_TotalFrames = 0;
 
@@ -45,10 +49,11 @@ namespace BruhEngine {
         "layout (location = 0) in vec2 aPos;\n"
         "layout (location = 1) in vec3 aColor;\n"
         "layout (location = 2) in vec2 aTexCoord;\n"
+        "uniform mat4 u_ViewProjection;\n"
         "out vec3 fragColor;\n"
         "out vec2 TexCoord;\n"
         "void main() {\n"
-        "   gl_Position = vec4(aPos, 0.0, 1.0);\n"
+        "   gl_Position = u_ViewProjection * vec4(aPos, 0.0, 1.0);\n"
         "   fragColor = aColor;\n"
         "   TexCoord = aTexCoord;\n"
         "}\n";
@@ -200,7 +205,10 @@ namespace BruhEngine {
             else if (e.type == SDL_WINDOWEVENT) {
                 // Window resize
                 if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED || e.window.event == SDL_WINDOWEVENT_RESIZED) {
-                    int drawWidth, drawHeight;
+                    winW = e.window.data1;
+                    winH = e.window.data2;
+
+                    int drawWidth = winW, drawHeight = winH;
                     SDL_GL_GetDrawableSize(window, &drawWidth, &drawHeight);
                     glViewport(0, 0, drawWidth, drawHeight);
                 }
@@ -371,7 +379,15 @@ namespace BruhEngine {
             ImGui::NewFrame();
         }
 
-        if (batcher && shader && texture) batcher->BeginBatch(*shader, *texture);
+        if (batcher && shader && texture) {
+            batcher->BeginBatch(*shader, *texture);
+
+            // Upload Ortographic Camera Matrix
+            std::array<float, 16> proj = camera.GetMatrix((float)winW, (float)winH);
+            shader->Bind();
+            GLint loc = glGetUniformLocation(shader->GetID(), "u_ViewProjection");
+            glUniformMatrix4fv(loc, 1, GL_FALSE, proj.data());
+        }
     }
 
     void DrawQuad(float x, float y, float width, float height, const float color[3]) {

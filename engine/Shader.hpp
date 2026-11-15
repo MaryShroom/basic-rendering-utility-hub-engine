@@ -55,4 +55,6 @@ public:
     void SetUniform2f(const std::string& name, float v0, float v1) {
         glUniform2f(glGetUniformLocation(m_RendererID, name.c_str()), v0, v1);
     }
+
+    inline GLuint GetID() const { return m_RendererID; }
 };
