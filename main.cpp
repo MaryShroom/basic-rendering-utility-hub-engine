@@ -372,10 +372,6 @@ int main(int argc, char* argv[]) {
 
         if (e.type == SDL_KEYDOWN) {
             float panSpeed = 20.0f / cam.zoom;
-            if (e.key.keysym.sym == SDLK_LEFT)  cam.posX -= panSpeed;
-            if (e.key.keysym.sym == SDLK_RIGHT) cam.posX += panSpeed;
-            if (e.key.keysym.sym == SDLK_UP)    cam.posY += panSpeed;
-            if (e.key.keysym.sym == SDLK_DOWN)  cam.posY -= panSpeed;
             if (e.key.keysym.sym == SDLK_v)     SetVSync(!IsVSyncEnabled());
             if (e.key.keysym.sym == SDLK_h)     telemetry.ToggleVisible();
             if (e.key.keysym.sym == SDLK_d)     SetDepthEnabled(!IsDepthEnabled());
@@ -384,6 +380,16 @@ int main(int argc, char* argv[]) {
 
     // Fixed update: move particles and bounce off screen edges
     auto updateLogic = [&](float fixedDt) {
+        auto& cam = BruhEngine::GetCamera();
+        const Uint8* keystate = SDL_GetKeyboardState(nullptr);
+
+        float panSpeed = 300.0f / cam.zoom;
+
+        if (keystate[SDL_SCANCODE_LEFT] || keystate[SDL_SCANCODE_A])  cam.posX -= panSpeed * fixedDt;
+        if (keystate[SDL_SCANCODE_RIGHT] || keystate[SDL_SCANCODE_D]) cam.posX += panSpeed * fixedDt;
+        if (keystate[SDL_SCANCODE_UP] || keystate[SDL_SCANCODE_W])    cam.posY += panSpeed * fixedDt;
+        if (keystate[SDL_SCANCODE_DOWN] || keystate[SDL_SCANCODE_S])  cam.posY -= panSpeed * fixedDt;
+
         for (auto& p : particles) {
             p.x += p.vx * fixedDt;
             p.y += p.vy * fixedDt;
