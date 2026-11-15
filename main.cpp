@@ -375,7 +375,7 @@ int main(int argc, char* argv[]) {
             float panSpeed = 20.0f / cam.zoom;
             if (e.key.keysym.sym == SDLK_v)     SetVSync(!IsVSyncEnabled());
             if (e.key.keysym.sym == SDLK_h)     telemetry.ToggleVisible();
-            if (e.key.keysym.sym == SDLK_d)     SetDepthEnabled(!IsDepthEnabled());
+            if (e.key.keysym.sym == SDLK_e)     SetDepthEnabled(!IsDepthEnabled());
         }
     });
 

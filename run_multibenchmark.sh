@@ -59,31 +59,31 @@ trap cleanup EXIT SIGINT SIGTERM SIGHUP
 COMMON_FLAGS="--window 700 700 --vsync 0 --telemetry 0 --autoexit 1 --duration 60 --warmup 2 --benchmark 1"
 # List of benchmarks setup.
 benchmarks=(
-  "Overdraw 5x, Blend On, Depth Off|$COMMON_FLAGS --count 2000 --pixels 35 --blend 1 --depth 0"
-  "Overdraw 10x, Blend On, Depth Off|$COMMON_FLAGS --count 4000 --pixels 35 --blend 1 --depth 0"
-  "Overdraw 20x, Blend On, Depth Off|$COMMON_FLAGS --count 8000 --pixels 35 --blend 1 --depth 0"
-  "Overdraw 25x, Blend On, Depth Off|$COMMON_FLAGS --count 10000 --pixels 35 --blend 1 --depth 0"
+  "Overdraw 5x, Blend On, Depth Off|$COMMON_FLAGS --count 2000 --sprite-size 35 --blend 1 --depth 0"
+  "Overdraw 10x, Blend On, Depth Off|$COMMON_FLAGS --count 4000 --sprite-size 35 --blend 1 --depth 0"
+  "Overdraw 20x, Blend On, Depth Off|$COMMON_FLAGS --count 8000 --sprite-size 35 --blend 1 --depth 0"
+  "Overdraw 25x, Blend On, Depth Off|$COMMON_FLAGS --count 10000 --sprite-size 35 --blend 1 --depth 0"
 
-  "Overdraw 5x, Blend Off, Depth Off|$COMMON_FLAGS --count 2000 --pixels 35 --blend 0 --depth 0"
-  "Overdraw 10x, Blend Off, Depth Off|$COMMON_FLAGS --count 4000 --pixels 35 --blend 0 --depth 0"
-  "Overdraw 20x, Blend Off, Depth Off|$COMMON_FLAGS --count 8000 --pixels 35 --blend 0 --depth 0"
-  "Overdraw 25x, Blend Off, Depth Off|$COMMON_FLAGS --count 10000 --pixels 35 --blend 0 --depth 0"
+  "Overdraw 5x, Blend Off, Depth Off|$COMMON_FLAGS --count 2000 --sprite-size 35 --blend 0 --depth 0"
+  "Overdraw 10x, Blend Off, Depth Off|$COMMON_FLAGS --count 4000 --sprite-size 35 --blend 0 --depth 0"
+  "Overdraw 20x, Blend Off, Depth Off|$COMMON_FLAGS --count 8000 --sprite-size 35 --blend 0 --depth 0"
+  "Overdraw 25x, Blend Off, Depth Off|$COMMON_FLAGS --count 10000 --sprite-size 35 --blend 0 --depth 0"
 
-  "Fixed count, varying size, Depth off, Blend On, 64px|$COMMON_FLAGS --count 10000 --pixels 64 --blend 1 --depth 0"
-  "Fixed count, varying size, Depth off, Blend On, 96px|$COMMON_FLAGS --count 10000 --pixels 96 --blend 1 --depth 0"
-  "Fixed count, varying size, Depth off, Blend On, 128px|$COMMON_FLAGS --count 10000 --pixels 128 --blend 1 --depth 0"
+  "Fixed count, varying size, Depth off, Blend On, 64px|$COMMON_FLAGS --count 10000 --sprite-size 64 --blend 1 --depth 0"
+  "Fixed count, varying size, Depth off, Blend On, 96px|$COMMON_FLAGS --count 10000 --sprite-size 96 --blend 1 --depth 0"
+  "Fixed count, varying size, Depth off, Blend On, 128px|$COMMON_FLAGS --count 10000 --sprite-size 128 --blend 1 --depth 0"
 
-  "Fixed overdraw, varying count, Depth off, Blend On, 71px, 2500 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 2500 --pixels 71 --blend 1 --depth 0"
-  "Fixed overdraw, varying count, Depth off, Blend On, 50px, 5000 sprites, ~24.6x Overdraw|$COMMON_FLAGS --count 5000 --pixels 50 --blend 1 --depth 0"
-  "Fixed overdraw, varying count, Depth off, Blend On, 35px, 10000 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 10000 --pixels 35 --blend 1 --depth 0"
-  "Fixed overdraw, varying count, Depth off, Blend On, 25px, 19460 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 19460 --pixels 25 --blend 1 --depth 0"
-  "Fixed overdraw, varying count, Depth off, Blend On, 17px, 41843 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 41843 --pixels 17 --blend 1 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend On, 71px, 2500 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 2500 --sprite-size 71 --blend 1 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend On, 50px, 5000 sprites, ~24.6x Overdraw|$COMMON_FLAGS --count 5000 --sprite-size 50 --blend 1 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend On, 35px, 10000 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 10000 --sprite-size 35 --blend 1 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend On, 25px, 19460 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 19460 --sprite-size 25 --blend 1 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend On, 17px, 41843 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 41843 --sprite-size 17 --blend 1 --depth 0"
 
-  "Fixed overdraw, varying count, Depth off, Blend Off, 71px, 2500 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 2500 --pixels 71 --blend 0 --depth 0"
-  "Fixed overdraw, varying count, Depth off, Blend Off, 50px, 5000 sprites, ~24.6x Overdraw|$COMMON_FLAGS --count 5000 --pixels 50 --blend 0 --depth 0"
-  "Fixed overdraw, varying count, Depth off, Blend Off, 35px, 10000 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 10000 --pixels 35 --blend 0 --depth 0"
-  "Fixed overdraw, varying count, Depth off, Blend Off, 25px, 19460 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 19460 --pixels 25 --blend 0 --depth 0"
-  "Fixed overdraw, varying count, Depth off, Blend Off, 17px, 41843 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 41843 --pixels 17 --blend 0 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend Off, 71px, 2500 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 2500 --sprite-size 71 --blend 0 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend Off, 50px, 5000 sprites, ~24.6x Overdraw|$COMMON_FLAGS --count 5000 --sprite-size 50 --blend 0 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend Off, 35px, 10000 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 10000 --sprite-size 35 --blend 0 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend Off, 25px, 19460 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 19460 --sprite-size 25 --blend 0 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend Off, 17px, 41843 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 41843 --sprite-size 17 --blend 0 --depth 0"
 )
 
 # --- Cooldown Per Run in second ---
