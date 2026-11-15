@@ -282,7 +282,8 @@ int main(int argc, char* argv[]) {
 
     // Initialize moving particles with a fixed seed and uniform distribution for full world coverage
     std::mt19937 rng(1337); // Fixed seed for reproducible benchmark runs
-    std::uniform_real_distribution<float> distPos(-350.0f, 350.0f);
+    float spawnLimit = 330.0f - (spriteWidth / 2.0f);
+    std::uniform_real_distribution<float> distPos(-spawnLimit, spawnLimit);
     std::uniform_real_distribution<float> distVel(-100.0f, 100.0f);
     std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
 

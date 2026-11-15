@@ -5,8 +5,8 @@ Target hardware: i5-2320, Radeon HD 5450 (Cedar), 6 GB RAM.
 
 ## Baseline (benchmark notes)
 
-- 10,000 sprites, size 0.1 x 0.1, ~25x overdraw, 1 draw call
-- Vsync off: ~117 fps, GPU load 100%, CPU ~33%, 88 C after 10 minutes
+- 10,000 sprites, 35 world units (0.1 NDC at 700x700 before commit 2bb33f7), ~25x overdraw, 1 draw call
+- Vsync off: ~117 fps, GPU load 100%, CPU ~33%, 88 C after 10 minutes (measured before 2bb33f7)
 - Conclusion: GPU-bound (fill rate and blending), not CPU-bound
 - Keep stress runs short (30-60 s). Do not run long at 100% GPU load.
 
@@ -21,7 +21,9 @@ Target hardware: i5-2320, Radeon HD 5450 (Cedar), 6 GB RAM.
 ## Next up (in order)
 
 - [x] 1. Orthographic camera: world units, pan and zoom, correct aspect ratio, viewport update on resize
-- [ ] 2. Culling: skip sprites outside the camera view
+- [ ] Fix startup overdraw calculation to use the camera view rect (not NDC [-1, 1])
+- [x] Rename or document `--pixels` as world units (equals screen pixels only at window height 700, zoom 1.0)
+- [ ] 2. Culling: skip sprites outside the camera view (overdraw figure must then count visible sprites only)
 - [ ] 3. Texture atlas and sprite sheets (add padding to avoid edge bleeding)
 - [ ] 4. Input layer: actions instead of raw keys, Escape to quit, gamepad support
 - [ ] 5. Render passes: opaque first (blending off, depth on), blended second, sorted by layer and texture
@@ -51,3 +53,4 @@ Target hardware: i5-2320, Radeon HD 5450 (Cedar), 6 GB RAM.
 - Draw opaque sprites without blending; blend only what needs it
 - No buffer or texture creation in the per-frame path
 - Keep SDL calls inside a small platform layer (easier SDL3 migration later)
+- Sprite sizes and positions are in world units; the camera converts to pixels. Never mix NDC and world units
