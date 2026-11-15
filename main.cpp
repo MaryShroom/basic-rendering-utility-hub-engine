@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <string>
 #include <cmath>
+#include <random>
 #include <SDL.h>
 
 #ifndef COMMIT_HASH
@@ -279,17 +280,23 @@ int main(int argc, char* argv[]) {
     float spriteWidth = (float)spritePixelWH;
     float spriteHeight = (float)spritePixelWH;
 
+    // Initialize moving particles with a fixed seed and uniform distribution for full world coverage
+    std::mt19937 rng(1337); // Fixed seed for reproducible benchmark runs
+    std::uniform_real_distribution<float> distPos(-350.0f, 350.0f);
+    std::uniform_real_distribution<float> distVel(-100.0f, 100.0f);
+    std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
+
     // Initialize however many moving particles
     std::vector<Particle> particles(particleCount);
     for (int i = 0; i < particleCount; ++i) {
-        particles[i].x = ((float)(rand() % 70000) / 100.0f) - 350.0f;
-        particles[i].y = ((float)(rand() % 70000) / 100.0f) - 350.0f;
-        particles[i].vx = ((float)(rand() % 200) - 100.0f);  // Velocity X
-        particles[i].vy = ((float)(rand() % 200) - 100.0f);  // Velocity Y
+        particles[i].x = distPos(rng);
+        particles[i].y = distPos(rng);
+        particles[i].vx = distVel(rng);  // Velocity X
+        particles[i].vy = distVel(rng);  // Velocity Y
 
-        particles[i].color[0] = (float)(rand() % 100) / 100.0f;     // R tint
-        particles[i].color[1] = (float)(rand() % 100) / 100.0f;     // G tint
-        particles[i].color[2] = 1.0f;                               // B tint
+        particles[i].color[0] = distColor(rng);     // R tint
+        particles[i].color[1] = distColor(rng);     // G tint
+        particles[i].color[2] = 1.0f;               // B tint
     }
 
     // Compute Precise Clipped Overdraw Factor Once at Startup
