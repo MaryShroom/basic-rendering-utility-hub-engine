@@ -394,8 +394,7 @@ namespace BruhEngine {
             // Upload Ortographic Camera Matrix
             std::array<float, 16> proj = s_Camera.GetMatrix((float)s_WinW, (float)s_WinH);
             shader->Bind();
-            GLint loc = glGetUniformLocation(shader->GetID(), "u_ViewProjection");
-            glUniformMatrix4fv(loc, 1, GL_FALSE, proj.data());
+            shader->SetUniformMat4("u_ViewProjection", proj.data());
         }
     }
 

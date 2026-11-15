@@ -2,10 +2,24 @@
 #include <glad/gl.h>
 #include <string>
 #include <iostream>
+#include <unordered_map>
 
 class Shader {
 private:
     GLuint m_RendererID;
+    mutable std::unordered_map<std::string, GLint> m_UniformLocationCache;
+
+    GLint GetUniformLocation(const std::string& name) const {
+        if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end())
+            return m_UniformLocationCache[name];
+
+        GLint location = glGetUniformLocation(m_RendererID, name.c_str());
+        if (location == -1) {
+            std::cout << "Warning: uniform '" << name << "' doesn't exist!\n";
+        }
+        m_UniformLocationCache[name] = location;
+        return location;
+    }
 
     GLuint CompileShader(GLenum type, const char* source) {
         GLuint shader = glCreateShader(type);
@@ -49,11 +63,15 @@ public:
     }
 
     void SetUniform1i(const std::string& name, int value) {
-        glUniform1i(glGetUniformLocation(m_RendererID, name.c_str()), value);
+        glUniform1i(GetUniformLocation(name), value);
     }
 
     void SetUniform2f(const std::string& name, float v0, float v1) {
-        glUniform2f(glGetUniformLocation(m_RendererID, name.c_str()), v0, v1);
+        glUniform2f(GetUniformLocation(name), v0, v1);
+    }
+
+    void SetUniformMat4(const std::string& name, const float* matrix) {
+        glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, matrix);
     }
 
     inline GLuint GetID() const { return m_RendererID; }
