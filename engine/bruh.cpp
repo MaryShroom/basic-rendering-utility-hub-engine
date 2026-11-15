@@ -38,8 +38,14 @@ namespace BruhEngine {
     static Texture* texture = nullptr;
     static SpriteBatcher* batcher = nullptr;
 
-    extern OrthographicCamera camera;
-    extern int winW, winH;
+    // Engine-managed internal state
+    static OrthographicCamera s_Camera;
+    static int s_WinW = 700;
+    static int s_WinH = 700;
+
+    OrthographicCamera& GetCamera() { return s_Camera; }
+    int GetWindowWidth() { return s_WinW; }
+    int GetWindowHeight() { return s_WinH; }
 
     static std::chrono::high_resolution_clock::time_point s_StartTime;
     static uint64_t s_TotalFrames = 0;
@@ -70,6 +76,9 @@ namespace BruhEngine {
     static bool s_ImGuiEnabled = true;
 
     bool Init(const char* title, int width, int height) {
+        s_WinW = width;
+        s_WinH = height;
+
         // Initialize SDL
         if (SDL_Init(SDL_INIT_VIDEO) < 0) {
             std::cerr << "SDL could not initialize! SDL_Error: " << SDL_GetError() << "\n";
@@ -205,10 +214,10 @@ namespace BruhEngine {
             else if (e.type == SDL_WINDOWEVENT) {
                 // Window resize
                 if (e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED || e.window.event == SDL_WINDOWEVENT_RESIZED) {
-                    winW = e.window.data1;
-                    winH = e.window.data2;
+                    s_WinW = e.window.data1;
+                    s_WinH = e.window.data2;
 
-                    int drawWidth = winW, drawHeight = winH;
+                    int drawWidth = s_WinW, drawHeight = s_WinH;
                     SDL_GL_GetDrawableSize(window, &drawWidth, &drawHeight);
                     glViewport(0, 0, drawWidth, drawHeight);
                 }
@@ -383,7 +392,7 @@ namespace BruhEngine {
             batcher->BeginBatch(*shader, *texture);
 
             // Upload Ortographic Camera Matrix
-            std::array<float, 16> proj = camera.GetMatrix((float)winW, (float)winH);
+            std::array<float, 16> proj = s_Camera.GetMatrix((float)s_WinW, (float)s_WinH);
             shader->Bind();
             GLint loc = glGetUniformLocation(shader->GetID(), "u_ViewProjection");
             glUniformMatrix4fv(loc, 1, GL_FALSE, proj.data());

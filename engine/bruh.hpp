@@ -2,6 +2,7 @@
 #include <functional>
 #include <string>
 #include <SDL.h>
+#include "OrthographicCamera.hpp"
 
 namespace BruhEngine {
     bool Init(const char* title, int width, int height);
@@ -31,6 +32,11 @@ namespace BruhEngine {
     bool IsBlendEnabled();
     void SetDepthEnabled(bool enabled);
     bool IsDepthEnabled();
+
+    // Orthographic Camera
+    OrthographicCamera& GetCamera();
+    int GetWindowWidth();
+    int GetWindowHeight();
 
     void SetImGuiEnabled(bool enabled);
 }

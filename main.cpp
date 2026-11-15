@@ -23,28 +23,22 @@
 
 using namespace BruhEngine;
 
-namespace BruhEngine {
-    OrthographicCamera camera;
-    int winW = 700;
-    int winH = 700;
-}
-
 void PrintHelp() {
     std::cout << "BruhEngine Benchmark Suite\n"
               << "Usage: BruhEngineBenchmark [options]\n\n"
               << "Options:\n"
-              << "  --window <w> <h>   Window width and height (default: 700 700)\n"
-              << "  --count <int>      Particle / sprite count (default: 10000)\n"
-              << "  --pixels <int>     Sprite size width/height in pixels (default: 35)\n"
-              << "  --blend <0|1>      Enable alpha blending (default: 1)\n"
-              << "  --depth <0|1>      Enable depth testing (default: 0)\n"
-              << "  --vsync <0|1>      Enable VSync (default: 0)\n"
-              << "  --telemetry <0|1>  Initial telemetry HUD visibility (default: 0)\n"
-              << "  --autoexit <0|1>   Automatically exit when benchmark finishes (default: 0)\n"
-              << "  --duration <sec>   Active benchmark run duration in seconds (default: 60.0)\n"
-              << "  --warmup <sec>     Warmup grace period in seconds (default: 2.0)\n"
-              << "  --benchmark <0|1>  Enable automated benchmark runner (default: 1)\n"
-              << "  -h, --help         Display this help message\n";
+              << "  --window <w> <h>    Window width and height (default: 700 700)\n"
+              << "  --count <int>       Particle / sprite count (default: 10000)\n"
+              << "  --sprite-size <int> Sprite size width/height in world units (default: 35)\n"
+              << "  --blend <0|1>       Enable alpha blending (default: 1)\n"
+              << "  --depth <0|1>       Enable depth testing (default: 0)\n"
+              << "  --vsync <0|1>       Enable VSync (default: 0)\n"
+              << "  --telemetry <0|1>   Initial telemetry HUD visibility (default: 0)\n"
+              << "  --autoexit <0|1>    Automatically exit when benchmark finishes (default: 0)\n"
+              << "  --duration <sec>    Active benchmark run duration in seconds (default: 60.0)\n"
+              << "  --warmup <sec>      Warmup grace period in seconds (default: 2.0)\n"
+              << "  --benchmark <0|1>   Enable automated benchmark runner (default: 1)\n"
+              << "  -h, --help          Display this help message\n";
 }
 
 // Strict helper to parse and validate integers without trailing garbage
@@ -94,8 +88,8 @@ struct Particle {
 
 int main(int argc, char* argv[]) {
     // Default Configuration Value
-    winW = 700;
-    winH = 700;
+    int winW = 700;
+    int winH = 700;
     int particleCount = 10000;       // 2000 (5x), 4000 (10x) or 8000 (20x)
     int spritePixelWH = 35;          // Pixel size 35px = 0.1 NDC size | For now, width and height sprite size is same, in px
     bool enableBenchmarkMode = true; // Benchmark and Telemetry Opt-In
@@ -134,14 +128,14 @@ int main(int argc, char* argv[]) {
                 return -1;
             }
             i++;
-        } else if (arg == "--pixels" || arg == "-p") {
+        } else if (arg == "--sprite-size" || arg == "-p") {
             if (i + 1 >= argc) {
-                std::cerr << "Error: --pixels requires an integer argument.\n";
+                std::cerr << "Error: --sprite-size requires an integer argument.\n";
                 PrintHelp();
                 return -1;
             }
             if (!ParseStrictInt(argv[i + 1], spritePixelWH)) {
-                std::cerr << "Error: Invalid or malformed integer value for --pixels: '" << argv[i + 1] << "'\n";
+                std::cerr << "Error: Invalid or malformed integer value for --sprite-size: '" << argv[i + 1] << "'\n";
                 PrintHelp();
                 return -1;
             }
@@ -258,7 +252,7 @@ int main(int argc, char* argv[]) {
         return -1;
     }
     if (spritePixelWH <= 0) {
-        std::cerr << "Error: Sprite pixel size must be greater than 0 (" << spritePixelWH << ").\n";
+        std::cerr << "Error: Sprite size must be greater than 0 (" << spritePixelWH << ").\n";
         return -1;
     }
     if (winW <= 0 || winH <= 0) {
@@ -306,6 +300,17 @@ int main(int argc, char* argv[]) {
     float yMin = -spriteHeight * pivotY;
     float yMax = spriteHeight * (1.0f - pivotY);
 
+    // Calculate initial camera view rectangle bounds in world units
+    auto& cam = BruhEngine::GetCamera();
+    float aspect = ((float)winH > 0.0f) ? ((float)winW / (float)winH) : 1.0f;
+    float halfH = (BruhEngine::GetCamera().baseHeight / 2.0f) / BruhEngine::GetCamera().zoom;
+    float halfW = halfH * aspect;
+    float viewLeft   = BruhEngine::GetCamera().posX - halfW;
+    float viewRight  = BruhEngine::GetCamera().posX + halfW;
+    float viewBottom = BruhEngine::GetCamera().posY - halfH;
+    float viewTop    = BruhEngine::GetCamera().posY + halfH;
+    float viewArea   = (viewRight - viewLeft) * (viewTop - viewBottom);
+
     double totalVisibleArea = 0.0;
     for (const auto& p : particles) {
         float left   = p.x + xMin;
@@ -314,10 +319,10 @@ int main(int argc, char* argv[]) {
         float top    = p.y + yMax;
 
         // Clamp edges to NDC viewport range [-1.0, 1.0]
-        float cLeft   = std::max(-1.0f, std::min(1.0f, left));
-        float cRight  = std::max(-1.0f, std::min(1.0f, right));
-        float cBottom = std::max(-1.0f, std::min(1.0f, bottom));
-        float cTop    = std::max(-1.0f, std::min(1.0f, top));
+        float cLeft   = std::max(viewLeft, std::min(viewRight, left));
+        float cRight  = std::max(viewLeft, std::min(viewRight, right));
+        float cBottom = std::max(viewBottom, std::min(viewTop, bottom));
+        float cTop    = std::max(viewBottom, std::min(viewTop, top));
 
         float cWidth  = cRight - cLeft;
         float cHeight = cTop - cBottom;
@@ -326,7 +331,7 @@ int main(int argc, char* argv[]) {
             totalVisibleArea += (double)(cWidth * cHeight);
         }
     }
-    double overdrawFactor = totalVisibleArea / 4.0;
+    double overdrawFactor = (viewArea > 0.0f) ? (totalVisibleArea / viewArea) : 0.0;
 
     TelemetryMonitor telemetry;
     telemetry.Init();
@@ -346,23 +351,24 @@ int main(int argc, char* argv[]) {
 
     // Register event listener to toggle VSync on pressing 'V'
     SetEventCallback([&telemetry](const SDL_Event& e) {
+        auto& cam = BruhEngine::GetCamera();
         // Zoom with scroll wheel
         if (e.type == SDL_MOUSEWHEEL) {
             if (e.wheel.y > 0) {
-                camera.zoom *= 1.1f; // Zoom in
+                cam.zoom *= 1.1f; // Zoom in
             } else if (e.wheel.y < 0) {
-                camera.zoom /= 1.1f; // Zoom out
+                cam.zoom /= 1.1f; // Zoom out
             }
             // Clamp zoom to safe ranges
-            camera.zoom = std::clamp(camera.zoom, 0.1f, 20.0f);
+            cam.zoom = std::clamp(cam.zoom, 0.1f, 20.0f);
         }
 
         if (e.type == SDL_KEYDOWN) {
-            float panSpeed = 20.0f / camera.zoom;
-            if (e.key.keysym.sym == SDLK_LEFT)  camera.posX -= panSpeed;
-            if (e.key.keysym.sym == SDLK_RIGHT) camera.posX += panSpeed;
-            if (e.key.keysym.sym == SDLK_UP)    camera.posY += panSpeed;
-            if (e.key.keysym.sym == SDLK_DOWN)  camera.posY -= panSpeed;
+            float panSpeed = 20.0f / cam.zoom;
+            if (e.key.keysym.sym == SDLK_LEFT)  cam.posX -= panSpeed;
+            if (e.key.keysym.sym == SDLK_RIGHT) cam.posX += panSpeed;
+            if (e.key.keysym.sym == SDLK_UP)    cam.posY += panSpeed;
+            if (e.key.keysym.sym == SDLK_DOWN)  cam.posY -= panSpeed;
             if (e.key.keysym.sym == SDLK_v)     SetVSync(!IsVSyncEnabled());
             if (e.key.keysym.sym == SDLK_h)     telemetry.ToggleVisible();
             if (e.key.keysym.sym == SDLK_d)     SetDepthEnabled(!IsDepthEnabled());
@@ -385,8 +391,6 @@ int main(int argc, char* argv[]) {
     Uint64 lastCounter = SDL_GetPerformanceCounter();
     bool wasRecording = false;
     bool benchmarkFinished = false;
-
-    camera.GetMatrix((float)winW, (float)winH);
 
     // Custom render logic: what to draw each frame
     auto renderLogic = [&]() {
