@@ -73,17 +73,17 @@ benchmarks=(
   "Fixed count, varying size, Depth off, Blend On, 96px|$COMMON_FLAGS --count 10000 --sprite-size 96 --blend 1 --depth 0"
   "Fixed count, varying size, Depth off, Blend On, 128px|$COMMON_FLAGS --count 10000 --sprite-size 128 --blend 1 --depth 0"
 
-  "Fixed overdraw, varying count, Depth off, Blend On, 71px, 2500 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 2500 --sprite-size 71 --blend 1 --depth 0"
-  "Fixed overdraw, varying count, Depth off, Blend On, 50px, 5000 sprites, ~24.6x Overdraw|$COMMON_FLAGS --count 5000 --sprite-size 50 --blend 1 --depth 0"
-  "Fixed overdraw, varying count, Depth off, Blend On, 35px, 10000 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 10000 --sprite-size 35 --blend 1 --depth 0"
-  "Fixed overdraw, varying count, Depth off, Blend On, 25px, 19460 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 19460 --sprite-size 25 --blend 1 --depth 0"
-  "Fixed overdraw, varying count, Depth off, Blend On, 17px, 41843 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 41843 --sprite-size 17 --blend 1 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend On, 71 sprite size, 2430 sprites, ~25.7x Overdraw|$COMMON_FLAGS --count 2430 --sprite-size 71 --blend 1 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend On, 50 sprite size, 4900 sprites, ~25.5x Overdraw|$COMMON_FLAGS --count 4900 --sprite-size 50 --blend 1 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend On, 35 sprite size, 10000 sprites, ~25.0x Overdraw|$COMMON_FLAGS --count 10000 --sprite-size 35 --blend 1 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend On, 25 sprite size, 19600 sprites, ~24.8x Overdraw|$COMMON_FLAGS --count 19600 --sprite-size 25 --blend 1 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend On, 17 sprite size, 42388 sprites, ~24.7x Overdraw|$COMMON_FLAGS --count 42388 --sprite-size 17 --blend 1 --depth 0"
 
-  "Fixed overdraw, varying count, Depth off, Blend Off, 71px, 2500 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 2500 --sprite-size 71 --blend 0 --depth 0"
-  "Fixed overdraw, varying count, Depth off, Blend Off, 50px, 5000 sprites, ~24.6x Overdraw|$COMMON_FLAGS --count 5000 --sprite-size 50 --blend 0 --depth 0"
-  "Fixed overdraw, varying count, Depth off, Blend Off, 35px, 10000 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 10000 --sprite-size 35 --blend 0 --depth 0"
-  "Fixed overdraw, varying count, Depth off, Blend Off, 25px, 19460 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 19460 --sprite-size 25 --blend 0 --depth 0"
-  "Fixed overdraw, varying count, Depth off, Blend Off, 17px, 41843 sprites, ~24.4x Overdraw|$COMMON_FLAGS --count 41843 --sprite-size 17 --blend 0 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend Off, 71 sprite size, 2430 sprites, ~25.7x Overdraw|$COMMON_FLAGS --count 2430 --sprite-size 71 --blend 0 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend Off, 50 sprite size, 4900 sprites, ~25.5x Overdraw|$COMMON_FLAGS --count 4900 --sprite-size 50 --blend 0 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend Off, 35 sprite size, 10000 sprites, ~25.0x Overdraw|$COMMON_FLAGS --count 10000 --sprite-size 35 --blend 0 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend Off, 25 sprite size, 19600 sprites, ~24.8x Overdraw|$COMMON_FLAGS --count 19600 --sprite-size 25 --blend 0 --depth 0"
+  "Fixed overdraw, varying count, Depth off, Blend Off, 17 sprite size, 42388 sprites, ~24.7x Overdraw|$COMMON_FLAGS --count 42388 --sprite-size 17 --blend 0 --depth 0"
 )
 
 # --- Cooldown Per Run in second ---

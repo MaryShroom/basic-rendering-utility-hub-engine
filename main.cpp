@@ -252,7 +252,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "Error: Particle count must be greater than 0 (" << particleCount << ").\n";
         return -1;
     }
-    if (spritePixelWH <= 0) {
+    if (spritePixelWH <= 0 || spritePixelWH >= 700) {
         std::cerr << "Error: Sprite size must be greater than 0 (" << spritePixelWH << ").\n";
         return -1;
     }
@@ -283,6 +283,7 @@ int main(int argc, char* argv[]) {
     // Initialize moving particles with a fixed seed and uniform distribution for full world coverage
     std::mt19937 rng(1337); // Fixed seed for reproducible benchmark runs
     float spawnLimit = 330.0f - (spriteWidth / 2.0f);
+    if (spawnLimit < 1.0f) spawnLimit = 1.0f; // Prevent negative or zero ranges
     std::uniform_real_distribution<float> distPos(-spawnLimit, spawnLimit);
     std::uniform_real_distribution<float> distVel(-100.0f, 100.0f);
     std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
@@ -309,7 +310,6 @@ int main(int argc, char* argv[]) {
     float yMax = spriteHeight * (1.0f - pivotY);
 
     // Calculate initial camera view rectangle bounds in world units
-    auto& cam = BruhEngine::GetCamera();
     float aspect = ((float)winH > 0.0f) ? ((float)winW / (float)winH) : 1.0f;
     float halfH = (BruhEngine::GetCamera().baseHeight / 2.0f) / BruhEngine::GetCamera().zoom;
     float halfW = halfH * aspect;
@@ -326,7 +326,6 @@ int main(int argc, char* argv[]) {
         float bottom = p.y + yMin;
         float top    = p.y + yMax;
 
-        // Clamp edges to NDC viewport range [-1.0, 1.0]
         float cLeft   = std::max(viewLeft, std::min(viewRight, left));
         float cRight  = std::max(viewLeft, std::min(viewRight, right));
         float cBottom = std::max(viewBottom, std::min(viewTop, bottom));
@@ -372,7 +371,6 @@ int main(int argc, char* argv[]) {
         }
 
         if (e.type == SDL_KEYDOWN) {
-            float panSpeed = 20.0f / cam.zoom;
             if (e.key.keysym.sym == SDLK_v)     SetVSync(!IsVSyncEnabled());
             if (e.key.keysym.sym == SDLK_h)     telemetry.ToggleVisible();
             if (e.key.keysym.sym == SDLK_e)     SetDepthEnabled(!IsDepthEnabled());
@@ -396,8 +394,8 @@ int main(int argc, char* argv[]) {
             p.y += p.vy * fixedDt;
 
             // Screen boundary bounce within world limits
-            if (p.x < -330.0f || p.x > 330.0f) p.vx = -p.vx;
-            if (p.y < -330.0f || p.y > 330.0f) p.vy = -p.vy;
+            if (p.x < -spawnLimit || p.x > spawnLimit) p.vx = -p.vx;
+            if (p.y < -spawnLimit || p.y > spawnLimit) p.vy = -p.vy;
         }
     };
 

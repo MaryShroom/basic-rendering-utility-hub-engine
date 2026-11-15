@@ -21,7 +21,7 @@ Target hardware: i5-2320, Radeon HD 5450 (Cedar), 6 GB RAM.
 ## Next up (in order)
 
 - [x] 1. Orthographic camera: world units, pan and zoom, correct aspect ratio, viewport update on resize
-- [ ] Fix startup overdraw calculation to use the camera view rect (not NDC [-1, 1])
+- [x] Fix startup overdraw calculation to use the camera view rect (not NDC [-1, 1])
 - [x] Rename or document `--pixels` as world units (equals screen pixels only at window height 700, zoom 1.0)
 - [ ] 2. Culling: skip sprites outside the camera view (overdraw figure must then count visible sprites only)
 - [ ] 3. Texture atlas and sprite sheets (add padding to avoid edge bleeding)
