@@ -33,6 +33,8 @@ add_library(bruh_engine STATIC
     BenchmarkRunner.cpp
     HardwareSampler.cpp
     TelemetryMonitor.cpp
+    core/Application.cpp
+    renderer/gl/RenderContext.cpp
 )
 target_include_directories(bruh_engine
     PUBLIC

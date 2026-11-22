@@ -1,8 +1,8 @@
 #pragma once
 #include <glad/gl.h>
-#include "core/Texture.hpp"
 #include "renderer/gl/IndexBuffer.hpp"
 #include "renderer/gl/Shader.hpp"
+#include "renderer/gl/Texture.hpp"
 #include "renderer/gl/VertexArray.hpp"
 #include "renderer/gl/VertexBuffer.hpp"
 #include <cstdint>
