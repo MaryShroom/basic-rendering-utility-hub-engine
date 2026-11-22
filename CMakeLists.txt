@@ -70,13 +70,20 @@ add_custom_target(UpdateGitVersion ALL
 )
 
 # Main and thirdparty sources (includes generated header so CMake tracks the build dependency)
-add_executable(BasicRenderingUtilityHub
-    main.cpp
-    engine/bruh.cpp
-    engine/TelemetryMonitor.cpp
-    engine/BenchmarkRunner.cpp
-    engine/HardwareSampler.cpp
+add_library(glad STATIC
     thirdparty/glad/src/gl.c
+)
+target_include_directories(glad PUBLIC
+    thirdparty/glad/include
+)
+target_link_libraries(glad PRIVATE
+    ${CMAKE_DL_LIBS}
+)
+
+add_subdirectory(engine)
+
+add_executable(BasicRenderingUtilityHub
+    src/main.cpp
 )
 
 add_dependencies(BasicRenderingUtilityHub UpdateGitVersion)
@@ -88,7 +95,13 @@ target_include_directories(BasicRenderingUtilityHub PRIVATE
 )
 
 # Link SDL2, OpenGL, ImGui
-target_link_libraries(BasicRenderingUtilityHub PRIVATE SDL2::SDL2 OpenGL::GL imgui)
+target_link_libraries(BasicRenderingUtilityHub
+    PRIVATE
+        bruh_engine
+        SDL2::SDL2
+        OpenGL::GL
+        imgui
+)
 
 # DEBUG flags
 target_compile_options(BasicRenderingUtilityHub PRIVATE

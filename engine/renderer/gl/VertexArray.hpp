@@ -1,6 +1,6 @@
 #pragma once
 #include <glad/gl.h>
-#include "VertexBuffer.hpp"
+#include "renderer/gl/VertexBuffer.hpp"
 
 class VertexArray {
 private:

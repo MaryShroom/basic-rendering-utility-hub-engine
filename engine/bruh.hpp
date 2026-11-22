@@ -2,7 +2,7 @@
 #include <functional>
 #include <string>
 #include <SDL.h>
-#include "OrthographicCamera.hpp"
+#include "renderer2d/OrthographicCamera.hpp"
 
 namespace BruhEngine {
     bool Init(const char* title, int width, int height);

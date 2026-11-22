@@ -1,10 +1,10 @@
 #pragma once
 #include <glad/gl.h>
-#include "VertexArray.hpp"
-#include "VertexBuffer.hpp"
-#include "IndexBuffer.hpp"
-#include "Shader.hpp"
-#include "Texture.hpp"
+#include "core/Texture.hpp"
+#include "renderer/gl/IndexBuffer.hpp"
+#include "renderer/gl/Shader.hpp"
+#include "renderer/gl/VertexArray.hpp"
+#include "renderer/gl/VertexBuffer.hpp"
 #include <cstdint>
 
 struct SpriteVertex {

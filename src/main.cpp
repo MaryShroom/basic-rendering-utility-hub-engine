@@ -1,7 +1,7 @@
 #include "engine/bruh.hpp"
 #include "engine/TelemetryMonitor.hpp"
 #include "engine/BenchmarkRunner.hpp"
-#include "engine/OrthographicCamera.hpp"
+#include "engine/renderer2d/OrthographicCamera.hpp"
 
 #if __has_include("GeneratedGitVersion.hpp")
 #include "GeneratedGitVersion.hpp"
