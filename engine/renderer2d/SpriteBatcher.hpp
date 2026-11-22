@@ -5,6 +5,7 @@
 #include "renderer/gl/Texture.hpp"
 #include "renderer/gl/VertexArray.hpp"
 #include "renderer/gl/VertexBuffer.hpp"
+#include "renderer2d/Renderer2D.hpp"
 #include <cstdint>
 
 struct SpriteVertex {
@@ -62,7 +63,7 @@ public:
         glEnableVertexAttribArray(3);
         glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(SpriteVertex), (const void*)offsetof(SpriteVertex, Pivot));
 
-        // Attribute 4: Texture ID (1 float) - shifted from attribute 3
+        // Attribute 4: Texture ID (1 float)
         glEnableVertexAttribArray(4);
         glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(SpriteVertex), (const void*)offsetof(SpriteVertex, TexID));
 
@@ -170,7 +171,7 @@ public:
         m_IndexBuffer->Bind();
         glDrawElements(GL_TRIANGLES, m_IndexCount, GL_UNSIGNED_INT, nullptr);
 
-        BruhEngine::IncrementDrawCalls();
+        Renderer2D::IncrementDrawCalls();
 
         // Reset index count for next batch chunk
         m_VertexBufferPtr = m_VertexBufferBase;

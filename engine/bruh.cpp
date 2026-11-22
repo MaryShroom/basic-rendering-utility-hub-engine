@@ -1,42 +1,9 @@
 #include "bruh.hpp"
 #include "core/Application.hpp"
 #include "renderer/gl/RenderContext.hpp"
-#include "renderer/gl/Shader.hpp"
-#include "renderer/gl/Texture.hpp"
-#include "renderer2d/OrthographicCamera.hpp"
-#include "renderer2d/SpriteBatcher.hpp"
-
-#include <array>
+#include "renderer2d/Renderer2D.hpp"
 
 namespace BruhEngine {
-    static int s_DrawCalls = 0;
-    static Shader* s_Shader = nullptr;
-    static Texture* s_Texture = nullptr;
-    static SpriteBatcher* s_Batcher = nullptr;
-    static OrthographicCamera s_Camera;
-
-    static const char* vertexShaderSource = "#version 330 core\n"
-        "layout (location = 0) in vec2 aPos;\n"
-        "layout (location = 1) in vec3 aColor;\n"
-        "layout (location = 2) in vec2 aTexCoord;\n"
-        "uniform mat4 u_ViewProjection;\n"
-        "out vec3 fragColor;\n"
-        "out vec2 TexCoord;\n"
-        "void main() {\n"
-        "   gl_Position = u_ViewProjection * vec4(aPos, 0.0, 1.0);\n"
-        "   fragColor = aColor;\n"
-        "   TexCoord = aTexCoord;\n"
-        "}\n";
-
-    static const char* fragmentShaderSource = "#version 330 core\n"
-        "in vec3 fragColor;\n"
-        "in vec2 TexCoord;\n"
-        "out vec4 FragColor;\n"
-        "uniform sampler2D u_Texture;\n"
-        "void main() {\n"
-        "   FragColor = texture(u_Texture, TexCoord) * vec4(fragColor, 1.0);\n"
-        "}\n";
-
     bool Init(const char* title, int width, int height) {
         RenderContext::ConfigureAttributes();
         if (!BruhApplication::InitWindow(title, width, height)) {
@@ -51,9 +18,12 @@ namespace BruhEngine {
             RenderContext::SetViewport(drawW, drawH);
         });
 
-        s_Shader = new Shader(vertexShaderSource, fragmentShaderSource);
-        s_Texture = new Texture(64, 64);
-        s_Batcher = new SpriteBatcher();
+        if (!Renderer2D::Init()) {
+            RenderContext::Shutdown();
+            BruhApplication::ShutdownWindow();
+            return false;
+        }
+
         return true;
     }
 
@@ -61,7 +31,7 @@ namespace BruhEngine {
         BruhApplication::Run(
             updateFunc,
             [&renderFunc]() {
-                s_DrawCalls = 0;
+                Renderer2D::ResetDrawCalls();
                 if (renderFunc) renderFunc();
             },
             []() {
@@ -72,18 +42,12 @@ namespace BruhEngine {
     }
 
     void Shutdown() {
-        delete s_Batcher;
-        delete s_Texture;
-        delete s_Shader;
-        s_Batcher = nullptr;
-        s_Texture = nullptr;
-        s_Shader = nullptr;
-
+        Renderer2D::Shutdown();
         RenderContext::Shutdown();
         BruhApplication::ShutdownWindow();
     }
 
-    OrthographicCamera& GetCamera() { return s_Camera; }
+    OrthographicCamera& GetCamera() { return Renderer2D::GetCamera(); }
     int GetWindowWidth() { return BruhApplication::GetWindowWidth(); }
     int GetWindowHeight() { return BruhApplication::GetWindowHeight(); }
     void SetWindowTitle(const std::string& title) { BruhApplication::SetWindowTitle(title); }
@@ -99,38 +63,29 @@ namespace BruhEngine {
     void SetDepthEnabled(bool enabled) { RenderContext::SetDepthEnabled(enabled); }
     bool IsDepthEnabled() { return RenderContext::IsDepthEnabled(); }
 
-    int GetDrawCalls() {
-        int pending = (s_Batcher && s_Batcher->HasPendingDraws()) ? 1 : 0;
-        return s_DrawCalls + pending;
-    }
-
-    void IncrementDrawCalls() { s_DrawCalls++; }
+    int GetDrawCalls() { return Renderer2D::GetDrawCalls(); }
+    void IncrementDrawCalls() { Renderer2D::IncrementDrawCalls(); }
 
     void BeginBatch() {
         RenderContext::Clear();
-        s_DrawCalls = 0;
 
         if (BruhApplication::IsImGuiEnabled()) {
             RenderContext::BeginImGuiFrame();
         }
 
-        if (s_Batcher && s_Shader && s_Texture) {
-            s_Batcher->BeginBatch(*s_Shader, *s_Texture);
-            std::array<float, 16> proj = s_Camera.GetMatrix(
-                (float)BruhApplication::GetWindowWidth(),
-                (float)BruhApplication::GetWindowHeight()
-            );
-            s_Shader->Bind();
-            s_Shader->SetUniformMat4("u_ViewProjection", proj.data());
-        }
+        Renderer2D::BeginBatch(
+            (float)BruhApplication::GetWindowWidth(),
+            (float)BruhApplication::GetWindowHeight()
+        );
     }
 
     void DrawQuad(float x, float y, float width, float height, const float color[3]) {
-        if (s_Batcher) s_Batcher->DrawQuad(x, y, width, height, color);
+        Renderer2D::DrawQuad(x, y, width, height, color);
     }
 
     void EndBatch() {
-        if (s_Batcher) s_Batcher->Flush();
+        Renderer2D::EndBatch();
+
         if (BruhApplication::IsImGuiEnabled()) {
             RenderContext::EndImGuiFrame();
         }
